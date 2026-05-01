@@ -154,14 +154,13 @@ const PokeSpeedChamp = () => {
                   <th className="px-4 py-3 text-left">Pokémon</th>
                   <th className="px-4 py-3 text-right">Real Speed</th>
                   <th className="px-4 py-3 text-right">Scarf Speed</th>
-                  <th className="px-4 py-3 text-right">Weather Speed</th>
-                  <th className="px-4 py-3 text-right pr-6">Boosted Speed</th>
+                  <th className="px-4 py-3 text-right pr-6">Weather Speed</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="text-center py-12 text-muted-foreground">
+                    <td colSpan={5} className="text-center py-12 text-muted-foreground">
                       Select Pokémon above to see the speed tier
                     </td>
                   </tr>
@@ -190,8 +189,7 @@ const PokeSpeedChamp = () => {
                     <td className="px-4 py-2 text-right font-mono text-muted-foreground">
                       {r.scarfSpeed === null ? "/" : r.scarfSpeed}
                     </td>
-                    <td className="px-4 py-2 text-right font-mono">{r.weatherSpeed}</td>
-                    <td className="px-4 py-2 text-right font-mono font-bold text-lg pr-6">{r.finalSpeed}</td>
+                    <td className="px-4 py-2 text-right font-mono font-bold text-lg pr-6">{r.weatherSpeed}</td>
                   </tr>
                 ))}
               </tbody>
