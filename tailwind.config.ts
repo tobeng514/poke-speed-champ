@@ -47,6 +47,23 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        ally: {
+          DEFAULT: "hsl(var(--ally))",
+          foreground: "hsl(var(--ally-foreground))",
+          bg: "hsl(var(--ally-bg))",
+        },
+        enemy: {
+          DEFAULT: "hsl(var(--enemy))",
+          foreground: "hsl(var(--enemy-foreground))",
+          bg: "hsl(var(--enemy-bg))",
+        },
+        weather: {
+          sun: "hsl(var(--weather-sun))",
+          rain: "hsl(var(--weather-rain))",
+          sand: "hsl(var(--weather-sand))",
+          snow: "hsl(var(--weather-snow))",
+        },
+        trickroom: "hsl(var(--trick-room))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
