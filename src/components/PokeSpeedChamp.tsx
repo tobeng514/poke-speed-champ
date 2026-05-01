@@ -114,10 +114,10 @@ const PokeSpeedChamp = () => {
             {/* Weather (left) */}
             <div className="flex items-center gap-2">
               <span className="text-xs uppercase tracking-wider text-muted-foreground mr-1">Weather</span>
-              <WeatherBtn active={weather === "sun"} onClick={() => toggleWeather("sun")} color="weather-sun" icon={<Sun className="w-4 h-4" />} label="Sun" />
-              <WeatherBtn active={weather === "rain"} onClick={() => toggleWeather("rain")} color="weather-rain" icon={<CloudRain className="w-4 h-4" />} label="Rain" />
-              <WeatherBtn active={weather === "sand"} onClick={() => toggleWeather("sand")} color="weather-sand" icon={<Wind className="w-4 h-4" />} label="Sand" />
-              <WeatherBtn active={weather === "snow"} onClick={() => toggleWeather("snow")} color="weather-snow" icon={<Snowflake className="w-4 h-4" />} label="Snow" />
+              <WeatherBtn active={weather === "sun"} onClick={() => toggleWeather("sun")} variant="sun" icon={<Sun className="w-4 h-4" />} label="Sun" />
+              <WeatherBtn active={weather === "rain"} onClick={() => toggleWeather("rain")} variant="rain" icon={<CloudRain className="w-4 h-4" />} label="Rain" />
+              <WeatherBtn active={weather === "sand"} onClick={() => toggleWeather("sand")} variant="sand" icon={<Wind className="w-4 h-4" />} label="Sand" />
+              <WeatherBtn active={weather === "snow"} onClick={() => toggleWeather("snow")} variant="snow" icon={<Snowflake className="w-4 h-4" />} label="Snow" />
             </div>
 
             {/* Tailwinds */}
@@ -266,26 +266,32 @@ const TeamPanel = ({
   );
 };
 
+const WEATHER_STYLES: Record<string, string> = {
+  sun: "bg-weather-sun/20 text-weather-sun border-weather-sun/60",
+  rain: "bg-weather-rain/20 text-weather-rain border-weather-rain/60",
+  sand: "bg-weather-sand/20 text-weather-sand border-weather-sand/60",
+  snow: "bg-weather-snow/20 text-weather-snow border-weather-snow/60",
+};
+
 const WeatherBtn = ({
   active,
   onClick,
   icon,
   label,
-  color,
+  variant,
 }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   label: string;
-  color: string;
+  variant: "sun" | "rain" | "sand" | "snow";
 }) => (
   <button
     onClick={onClick}
-    data-active={active}
     className={cn(
       "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-all",
       "border-border bg-secondary/50 text-muted-foreground hover:text-foreground",
-      active && `bg-[hsl(var(--${color}))]/20 text-[hsl(var(--${color}))] border-[hsl(var(--${color}))]/60`
+      active && WEATHER_STYLES[variant]
     )}
   >
     {icon}
