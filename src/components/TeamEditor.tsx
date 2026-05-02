@@ -1,0 +1,176 @@
+import { useState } from "react";
+import type { TeamSlot } from "@/types/team";
+import { POKEMON, NATURES, ITEMS, findPokemon, calcHp, calcStat, speedNatureMod } from "@/data/pokemon";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type StatKey = "hp" | "atk" | "def" | "spa" | "spd" | "spe";
+const STATS: { key: StatKey; label: string }[] = [
+  { key: "hp", label: "HP" },
+  { key: "atk", label: "Atk" },
+  { key: "def", label: "Def" },
+  { key: "spa", label: "SpA" },
+  { key: "spd", label: "SpD" },
+  { key: "spe", label: "Spe" },
+];
+
+const TeamEditor = ({
+  slots,
+  onChange,
+}: {
+  slots: TeamSlot[];
+  onChange: (slots: TeamSlot[]) => void;
+}) => {
+  const [openIdx, setOpenIdx] = useState<number | null>(0);
+
+  const update = (i: number, patch: Partial<TeamSlot>) => {
+    onChange(slots.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
+  };
+
+  const updateEv = (i: number, k: StatKey, v: number) => {
+    const slot = slots[i];
+    const others = (Object.keys(slot.evs) as StatKey[])
+      .filter((x) => x !== k)
+      .reduce((sum, x) => sum + slot.evs[x], 0);
+    const max = Math.min(252, 508 - others);
+    update(i, { evs: { ...slot.evs, [k]: Math.min(max, Math.max(0, v)) } });
+  };
+
+  return (
+    <div className="space-y-2">
+      {slots.map((slot, i) => {
+        const data = findPokemon(slot.id);
+        const open = openIdx === i;
+        const evTotal = Object.values(slot.evs).reduce((a, b) => a + b, 0);
+        return (
+          <Collapsible key={i} open={open} onOpenChange={(v) => setOpenIdx(v ? i : null)}>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <CollapsibleTrigger className="w-full flex items-center gap-3 p-3 active:bg-secondary/40">
+                <div className="w-10 h-10 rounded-lg bg-secondary/50 flex items-center justify-center shrink-0">
+                  {data ? (
+                    <img src={data.sprite} alt="" className="w-10 h-10 object-contain" />
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">{i + 1}</span>
+                  )}
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="font-semibold text-sm truncate">{data?.name ?? `空位 ${i + 1}`}</p>
+                  {data && (
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      {slot.nature} · {slot.item} · EV {evTotal}/508
+                    </p>
+                  )}
+                </div>
+                <ChevronDown className={cn("w-4 h-4 transition-transform", open && "rotate-180")} />
+              </CollapsibleTrigger>
+
+              <CollapsibleContent className="px-3 pb-3 space-y-3 border-t border-border pt-3">
+                <Select value={slot.id ?? ""} onValueChange={(v) => {
+                  const p = findPokemon(v);
+                  update(i, { id: v, ability: p?.abilities[0] });
+                }}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="選擇 Pokémon" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {POKEMON.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        <span className="flex items-center gap-2">
+                          <img src={p.sprite} alt="" className="w-5 h-5 object-contain" />
+                          {p.name}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {data && (
+                  <>
+                    <Input
+                      placeholder="暱稱（可選）"
+                      value={slot.nickname ?? ""}
+                      onChange={(e) => update(i, { nickname: e.target.value })}
+                      className="h-9"
+                    />
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <Field label="特性">
+                        <Select value={slot.ability} onValueChange={(v) => update(i, { ability: v })}>
+                          <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {data.abilities.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                      <Field label="性格">
+                        <Select value={slot.nature} onValueChange={(v) => update(i, { nature: v as any })}>
+                          <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent className="max-h-60">
+                            {NATURES.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                      <Field label="道具">
+                        <Select value={slot.item} onValueChange={(v) => update(i, { item: v as any })}>
+                          <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent className="max-h-60">
+                            {ITEMS.map((it) => <SelectItem key={it} value={it}>{it}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-semibold">努力值 (EVs)</span>
+                        <span className="font-mono text-muted-foreground">{evTotal}/508</span>
+                      </div>
+                      {STATS.map(({ key, label }) => {
+                        const ev = slot.evs[key];
+                        const finalStat = key === "hp"
+                          ? calcHp(data.baseHp, slot.ivs.hp, ev, slot.level)
+                          : key === "spe"
+                            ? calcStat(data.baseSpeed, slot.ivs.spe, ev, speedNatureMod(slot.nature ?? "Hardy"))
+                            : null;
+                        return (
+                          <div key={key} className="flex items-center gap-2">
+                            <span className="w-9 text-[11px] text-muted-foreground">{label}</span>
+                            <Slider
+                              value={[ev]}
+                              min={0}
+                              max={252}
+                              step={4}
+                              onValueChange={([v]) => updateEv(i, key, v)}
+                              className="flex-1"
+                            />
+                            <span className="w-9 text-right text-[11px] font-mono">{ev}</span>
+                            {finalStat !== null && (
+                              <span className="w-10 text-right text-[11px] font-mono text-primary">{finalStat}</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </CollapsibleContent>
+            </div>
+          </Collapsible>
+        );
+      })}
+    </div>
+  );
+};
+
+const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="space-y-1">
+    <label className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</label>
+    {children}
+  </div>
+);
+
+export default TeamEditor;
