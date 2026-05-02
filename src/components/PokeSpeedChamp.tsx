@@ -1,52 +1,67 @@
-import { useMemo, useState } from "react";
-import { POKEMON, calcMaxSpeed, stageMultiplier, type PokemonData } from "@/data/pokemon";
+import { useEffect, useMemo, useState } from "react";
+import {
+  POKEMON, calcStat, calcHp, stageMultiplier, speedNatureMod, findPokemon,
+  type PokemonData,
+} from "@/data/pokemon";
+import type { TeamSlot } from "@/types/team";
+import { emptySlot } from "@/types/team";
+import { useTeams } from "@/hooks/useTeams";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { Sun, CloudRain, Wind, Snowflake, Repeat2, RotateCcw, Users, Settings2, ChevronDown } from "lucide-react";
+import { Sun, CloudRain, Wind, Snowflake, Repeat2, RotateCcw, Users, ChevronDown } from "lucide-react";
 
 type Weather = "none" | "sun" | "rain" | "sand" | "snow";
 type Side = "ally" | "enemy";
 
-interface Slot {
-  id: string | null;
+interface BattleSlot extends TeamSlot {
   stage: number;
-  scarf: boolean;
+  scarfOverride: boolean; // when true, treat as scarf regardless of held item
 }
 
-const emptySlot = (): Slot => ({ id: null, stage: 0, scarf: false });
-const emptyTeam = (): Slot[] => Array.from({ length: 6 }, emptySlot);
+const toBattle = (s: TeamSlot): BattleSlot => ({ ...s, stage: 0, scarfOverride: s.item === "Choice Scarf" });
+const emptyBattleTeam = (): BattleSlot[] => Array.from({ length: 6 }, () => toBattle(emptySlot()));
 const STAGES = [6, 5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6];
 
 interface Row {
-  slot: Slot;
+  slot: BattleSlot;
   data: PokemonData;
   side: Side;
   realSpeed: number;
   scarfSpeed: number | null;
   weatherSpeed: number;
-  finalSpeed: number;
+  isScarf: boolean;
 }
 
 const PokeSpeedChamp = () => {
-  const [ally, setAlly] = useState<Slot[]>(emptyTeam());
-  const [enemy, setEnemy] = useState<Slot[]>(emptyTeam());
+  const { battleTeam } = useTeams();
+  const [ally, setAlly] = useState<BattleSlot[]>(emptyBattleTeam());
+  const [enemy, setEnemy] = useState<BattleSlot[]>(emptyBattleTeam());
   const [allyTW, setAllyTW] = useState(false);
   const [enemyTW, setEnemyTW] = useState(false);
   const [trickRoom, setTrickRoom] = useState(false);
   const [weather, setWeather] = useState<Weather>("none");
   const [teamSheet, setTeamSheet] = useState<Side | null>(null);
 
-  const updateSlot = (side: Side, idx: number, patch: Partial<Slot>) => {
+  // Load active battle team into ally side whenever it changes.
+  useEffect(() => {
+    if (battleTeam) {
+      const slots = battleTeam.slots.map(toBattle);
+      while (slots.length < 6) slots.push(toBattle(emptySlot()));
+      setAlly(slots.slice(0, 6));
+    }
+  }, [battleTeam?.id]);
+
+  const updateSlot = (side: Side, idx: number, patch: Partial<BattleSlot>) => {
     const setter = side === "ally" ? setAlly : setEnemy;
     setter((prev) => prev.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
   };
 
   const reset = () => {
-    setAlly(emptyTeam());
-    setEnemy(emptyTeam());
+    setAlly(battleTeam ? battleTeam.slots.map(toBattle).concat(emptyBattleTeam()).slice(0, 6) : emptyBattleTeam());
+    setEnemy(emptyBattleTeam());
     setAllyTW(false);
     setEnemyTW(false);
     setTrickRoom(false);
@@ -56,27 +71,33 @@ const PokeSpeedChamp = () => {
   const toggleWeather = (w: Weather) => setWeather((cur) => (cur === w ? "none" : w));
 
   const rows = useMemo<Row[]>(() => {
-    const build = (slots: Slot[], side: Side): Row[] =>
+    const build = (slots: BattleSlot[], side: Side): Row[] =>
       slots
         .filter((s) => s.id)
         .map((s) => {
-          const data = POKEMON.find((p) => p.id === s.id)!;
-          const max = calcMaxSpeed(data.baseSpeed);
-          const real = Math.floor(max * stageMultiplier(s.stage));
+          const data = findPokemon(s.id)!;
+          const baseSpd = calcStat(data.baseSpeed, s.ivs.spe, s.evs.spe, speedNatureMod(s.nature ?? "Hardy"));
+          const real = Math.floor(baseSpd * stageMultiplier(s.stage));
+          const isScarf = s.scarfOverride || s.item === "Choice Scarf";
           const scarfVal = Math.floor(real * 1.5);
-          let wSpd = s.scarf ? scarfVal : real;
+          let wSpd = isScarf ? scarfVal : real;
           const matched =
-            (weather === "sun" && data.weatherAbility === "Chlorophyll") ||
-            (weather === "rain" && data.weatherAbility === "Swift Swim") ||
-            (weather === "sand" && data.weatherAbility === "Sand Rush") ||
-            (weather === "snow" && data.weatherAbility === "Slush Rush");
+            (weather === "sun" && data.weatherAbility === "Chlorophyll" && s.ability === "Chlorophyll") ||
+            (weather === "rain" && data.weatherAbility === "Swift Swim" && s.ability === "Swift Swim") ||
+            (weather === "sand" && data.weatherAbility === "Sand Rush" && s.ability === "Sand Rush") ||
+            (weather === "snow" && data.weatherAbility === "Slush Rush" && s.ability === "Slush Rush");
           if (matched) wSpd = Math.floor(wSpd * 2);
           const tw = side === "ally" ? allyTW : enemyTW;
-          const finalSpd = tw ? Math.floor(wSpd * 2) : wSpd;
-          return { slot: s, data, side, realSpeed: real, scarfSpeed: s.scarf ? scarfVal : null, weatherSpeed: wSpd, finalSpeed: finalSpd };
+          if (tw) wSpd = Math.floor(wSpd * 2);
+          return {
+            slot: s, data, side, realSpeed: real,
+            scarfSpeed: isScarf ? scarfVal : null,
+            weatherSpeed: wSpd,
+            isScarf,
+          };
         });
     const all = [...build(ally, "ally"), ...build(enemy, "enemy")];
-    all.sort((a, b) => (trickRoom ? a.finalSpeed - b.finalSpeed : b.finalSpeed - a.finalSpeed));
+    all.sort((a, b) => (trickRoom ? a.weatherSpeed - b.weatherSpeed : b.weatherSpeed - a.weatherSpeed));
     return all;
   }, [ally, enemy, allyTW, enemyTW, trickRoom, weather]);
 
@@ -85,29 +106,27 @@ const PokeSpeedChamp = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      {/* Status bar safe area + Header */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
         <div className="px-4 py-3 flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-ally to-enemy bg-clip-text text-transparent">
-              PokeSpeed Champ
+              對戰 Speed Tier
             </h1>
-            <p className="text-[10px] text-muted-foreground -mt-0.5">VGC Live Speed Tier</p>
+            <p className="text-[10px] text-muted-foreground -mt-0.5">
+              {battleTeam ? `當前隊伍：${battleTeam.name}` : "未設置當前隊伍"}
+            </p>
           </div>
           <Button variant="ghost" size="sm" onClick={reset} className="h-9 px-2">
             <RotateCcw className="w-4 h-4" />
           </Button>
         </div>
-
-        {/* Team selector chips */}
         <div className="px-4 pb-3 grid grid-cols-2 gap-2">
           <TeamChip side="ally" count={allyCount} onClick={() => setTeamSheet("ally")} />
           <TeamChip side="enemy" count={enemyCount} onClick={() => setTeamSheet("enemy")} />
         </div>
       </header>
 
-      {/* Speed list */}
-      <main className="flex-1 px-3 py-3 pb-[180px]">
+      <main className="flex-1 px-3 py-3 pb-[200px]">
         <div className="flex items-center justify-between mb-2 px-1">
           <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Speed Tier</h2>
           <span className="text-[10px] text-muted-foreground">
@@ -117,7 +136,7 @@ const PokeSpeedChamp = () => {
 
         {rows.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground text-sm border border-dashed border-border rounded-xl">
-            Tap a team above to add Pokémon
+            撳上面隊伍按鈕加 Pokémon
           </div>
         ) : (
           <ul className="space-y-2">
@@ -126,9 +145,7 @@ const PokeSpeedChamp = () => {
                 key={`${r.side}-${i}-${r.data.id}`}
                 className={cn(
                   "rounded-xl border p-3 flex items-center gap-3 active:scale-[0.99] transition-transform",
-                  r.side === "ally"
-                    ? "bg-ally-bg/50 border-ally/30"
-                    : "bg-enemy-bg/50 border-enemy/30"
+                  r.side === "ally" ? "bg-ally-bg/50 border-ally/30" : "bg-enemy-bg/50 border-enemy/30"
                 )}
               >
                 <div className={cn("text-xs font-mono w-6 text-center", r.side === "ally" ? "text-ally" : "text-enemy")}>
@@ -136,16 +153,14 @@ const PokeSpeedChamp = () => {
                 </div>
                 <img src={r.data.sprite} alt={r.data.name} className="w-12 h-12 object-contain shrink-0" loading="lazy" />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-semibold text-sm truncate">{r.data.name}</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-semibold text-sm truncate">{r.slot.nickname || r.data.name}</span>
                     {r.slot.stage !== 0 && (
                       <span className={cn("text-[10px] px-1 py-0.5 rounded font-mono", r.slot.stage > 0 ? "bg-ally/20 text-ally" : "bg-enemy/20 text-enemy")}>
                         {r.slot.stage > 0 ? `+${r.slot.stage}` : r.slot.stage}
                       </span>
                     )}
-                    {r.slot.scarf && (
-                      <span className="text-[10px] px-1 py-0.5 rounded font-mono bg-primary/20 text-primary">SCF</span>
-                    )}
+                    {r.isScarf && <span className="text-[10px] px-1 py-0.5 rounded font-mono bg-primary/20 text-primary">SCF</span>}
                   </div>
                   <div className="flex gap-2 text-[10px] text-muted-foreground font-mono mt-0.5">
                     <span>Real {r.realSpeed}</span>
@@ -162,17 +177,14 @@ const PokeSpeedChamp = () => {
         )}
       </main>
 
-      {/* Bottom fixed control dock */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)]">
-        <div className="px-3 py-2.5 space-y-2">
-          {/* Weather row */}
+      <nav className="fixed bottom-[calc(env(safe-area-inset-bottom)+72px)] inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border">
+        <div className="px-3 py-2.5 space-y-2 max-w-md mx-auto">
           <div className="grid grid-cols-4 gap-1.5">
             <WeatherBtn active={weather === "sun"} onClick={() => toggleWeather("sun")} variant="sun" icon={<Sun className="w-4 h-4" />} label="Sun" />
             <WeatherBtn active={weather === "rain"} onClick={() => toggleWeather("rain")} variant="rain" icon={<CloudRain className="w-4 h-4" />} label="Rain" />
             <WeatherBtn active={weather === "sand"} onClick={() => toggleWeather("sand")} variant="sand" icon={<Wind className="w-4 h-4" />} label="Sand" />
             <WeatherBtn active={weather === "snow"} onClick={() => toggleWeather("snow")} variant="snow" icon={<Snowflake className="w-4 h-4" />} label="Snow" />
           </div>
-          {/* Field effects */}
           <div className="grid grid-cols-3 gap-1.5">
             <FieldBtn active={allyTW} onClick={() => setAllyTW((v) => !v)} className="data-[active=true]:bg-ally data-[active=true]:text-ally-foreground data-[active=true]:border-ally">
               <Wind className="w-3.5 h-3.5" /> Ally TW
@@ -187,17 +199,16 @@ const PokeSpeedChamp = () => {
         </div>
       </nav>
 
-      {/* Team sheet (bottom) */}
       <Sheet open={teamSheet !== null} onOpenChange={(o) => !o && setTeamSheet(null)}>
-        <SheetContent side="bottom" className="h-[85vh] p-0 flex flex-col">
+        <SheetContent side="bottom" className="h-[88vh] p-0 flex flex-col">
           <SheetHeader className="px-4 py-3 border-b border-border">
             <SheetTitle className={cn("text-base", teamSheet === "ally" ? "text-ally" : "text-enemy")}>
-              {teamSheet === "ally" ? "Your Team" : "Opponent Team"}
+              {teamSheet === "ally" ? "我方隊伍" : "對手隊伍"}
             </SheetTitle>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {teamSheet && (teamSheet === "ally" ? ally : enemy).map((s, i) => (
-              <SlotEditor
+              <BattleSlotEditor
                 key={i}
                 slot={s}
                 onChange={(p) => updateSlot(teamSheet, i, p)}
@@ -211,8 +222,6 @@ const PokeSpeedChamp = () => {
   );
 };
 
-/* ---------------- Sub-components ---------------- */
-
 const TeamChip = ({ side, count, onClick }: { side: Side; count: number; onClick: () => void }) => {
   const isAlly = side === "ally";
   return (
@@ -225,9 +234,7 @@ const TeamChip = ({ side, count, onClick }: { side: Side; count: number; onClick
     >
       <div className="flex items-center gap-2">
         <Users className={cn("w-4 h-4", isAlly ? "text-ally" : "text-enemy")} />
-        <span className="text-xs font-bold uppercase tracking-wider">
-          {isAlly ? "Your" : "Opponent"}
-        </span>
+        <span className="text-xs font-bold uppercase tracking-wider">{isAlly ? "我方" : "對手"}</span>
       </div>
       <div className="flex items-center gap-1">
         <span className="text-sm font-mono font-bold">{count}/6</span>
@@ -237,23 +244,23 @@ const TeamChip = ({ side, count, onClick }: { side: Side; count: number; onClick
   );
 };
 
-const SlotEditor = ({
-  slot,
-  onChange,
-  accent,
+const BattleSlotEditor = ({
+  slot, onChange, accent,
 }: {
-  slot: Slot;
-  onChange: (patch: Partial<Slot>) => void;
-  accent: Side;
+  slot: BattleSlot; onChange: (patch: Partial<BattleSlot>) => void; accent: Side;
 }) => {
+  const data = findPokemon(slot.id);
   return (
     <div className={cn(
       "rounded-xl border p-3 space-y-2",
       accent === "ally" ? "border-ally/30 bg-ally-bg/20" : "border-enemy/30 bg-enemy-bg/20"
     )}>
-      <Select value={slot.id ?? ""} onValueChange={(v) => onChange({ id: v })}>
+      <Select value={slot.id ?? ""} onValueChange={(v) => {
+        const p = findPokemon(v);
+        onChange({ id: v, ability: p?.abilities[0] });
+      }}>
         <SelectTrigger className="h-11">
-          <SelectValue placeholder="Select Pokémon" />
+          <SelectValue placeholder="選擇 Pokémon" />
         </SelectTrigger>
         <SelectContent className="max-h-72">
           {POKEMON.map((p) => (
@@ -266,28 +273,31 @@ const SlotEditor = ({
           ))}
         </SelectContent>
       </Select>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground px-1">Stage</label>
-          <Select value={String(slot.stage)} onValueChange={(v) => onChange({ stage: Number(v) })}>
-            <SelectTrigger className="h-10">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STAGES.map((st) => (
-                <SelectItem key={st} value={String(st)}>{st > 0 ? `+${st}` : st}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground px-1">Choice Scarf</label>
-          <div className="h-10 rounded-md border border-input flex items-center justify-between px-3 bg-background">
-            <span className="text-xs text-muted-foreground">{slot.scarf ? "On" : "Off"}</span>
-            <Switch checked={slot.scarf} onCheckedChange={(v) => onChange({ scarf: v })} disabled={!slot.id} />
+      {data && (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground px-1">階段</label>
+              <Select value={String(slot.stage)} onValueChange={(v) => onChange({ stage: Number(v) })}>
+                <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STAGES.map((st) => <SelectItem key={st} value={String(st)}>{st > 0 ? `+${st}` : st}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground px-1">圍巾</label>
+              <div className="h-10 rounded-md border border-input flex items-center justify-between px-3 bg-background">
+                <span className="text-xs text-muted-foreground">{slot.scarfOverride || slot.item === "Choice Scarf" ? "On" : "Off"}</span>
+                <Switch
+                  checked={slot.scarfOverride || slot.item === "Choice Scarf"}
+                  onCheckedChange={(v) => onChange({ scarfOverride: v })}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 };
@@ -299,11 +309,7 @@ const WEATHER_STYLES: Record<string, string> = {
   snow: "bg-weather-snow/20 text-weather-snow border-weather-snow",
 };
 
-const WeatherBtn = ({
-  active, onClick, icon, label, variant,
-}: {
-  active: boolean; onClick: () => void; icon: React.ReactNode; label: string; variant: "sun" | "rain" | "sand" | "snow";
-}) => (
+const WeatherBtn = ({ active, onClick, icon, label, variant }: any) => (
   <button
     onClick={onClick}
     className={cn(
@@ -312,16 +318,11 @@ const WeatherBtn = ({
       active && WEATHER_STYLES[variant]
     )}
   >
-    {icon}
-    {label}
+    {icon}{label}
   </button>
 );
 
-const FieldBtn = ({
-  active, onClick, children, className,
-}: {
-  active: boolean; onClick: () => void; children: React.ReactNode; className?: string;
-}) => (
+const FieldBtn = ({ active, onClick, children, className }: any) => (
   <button
     data-active={active}
     onClick={onClick}
