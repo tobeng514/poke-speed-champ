@@ -74,12 +74,7 @@ const TeamEditor = ({
                   </SelectTrigger>
                   <SelectContent className="max-h-72">
                     {POKEMON.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        <span className="flex items-center gap-2">
-                          <img src={p.sprite} alt="" className="w-5 h-5 object-contain" />
-                          {p.name}
-                        </span>
-                      </SelectItem>
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
