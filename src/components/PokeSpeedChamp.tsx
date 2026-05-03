@@ -11,7 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { Sun, CloudRain, Wind, Snowflake, Repeat2, RotateCcw, Users, ChevronDown } from "lucide-react";
+import { Sun, CloudRain, Wind, Snowflake, Repeat2, RotateCcw, Users, ChevronDown, Camera, Image as ImageIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type Weather = "none" | "sun" | "rain" | "sand" | "snow";
 type Side = "ally" | "enemy";
