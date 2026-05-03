@@ -61,7 +61,7 @@ const TeamEditor = ({
                   <p className="font-semibold text-sm truncate">{data?.name ?? `空位 ${i + 1}`}</p>
                   {data && (
                     <p className="text-[10px] text-muted-foreground truncate">
-                      {slot.nature} · {slot.item} · EV {evTotal}/508
+                      {slot.nature} · {slot.item} · EV {evTotal}/{EV_TOTAL_CAP}
                     </p>
                   )}
                 </div>
