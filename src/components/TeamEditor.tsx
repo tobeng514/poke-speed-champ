@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { TeamSlot } from "@/types/team";
-import { POKEMON, NATURES, ITEMS, findPokemon, calcHp, calcStat, speedNatureMod } from "@/data/pokemon";
+import { POKEMON, NATURES, ITEMS, findPokemon, calcHp, calcStat, speedNatureMod, EV_TOTAL_CAP, EV_INDIVIDUAL_CAP } from "@/data/pokemon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -36,8 +36,8 @@ const TeamEditor = ({
     const others = (Object.keys(slot.evs) as StatKey[])
       .filter((x) => x !== k)
       .reduce((sum, x) => sum + slot.evs[x], 0);
-    const max = Math.min(252, 508 - others);
-    update(i, { evs: { ...slot.evs, [k]: Math.min(max, Math.max(0, v)) } });
+    const max = Math.min(EV_INDIVIDUAL_CAP, EV_TOTAL_CAP - others);
+    update(i, { evs: { ...slot.evs, [k]: Math.min(max, Math.max(0, Math.round(v))) } });
   };
 
   return (
@@ -50,18 +50,14 @@ const TeamEditor = ({
           <Collapsible key={i} open={open} onOpenChange={(v) => setOpenIdx(v ? i : null)}>
             <div className="rounded-xl border border-border bg-card overflow-hidden">
               <CollapsibleTrigger className="w-full flex items-center gap-3 p-3 active:bg-secondary/40">
-                <div className="w-10 h-10 rounded-lg bg-secondary/50 flex items-center justify-center shrink-0">
-                  {data ? (
-                    <img src={data.sprite} alt="" className="w-10 h-10 object-contain" />
-                  ) : (
-                    <span className="text-[10px] text-muted-foreground">{i + 1}</span>
-                  )}
+                <div className="w-10 h-10 rounded-lg bg-secondary/50 flex items-center justify-center shrink-0 text-sm text-muted-foreground">
+                  {data ? "?" : <span className="text-[10px]">{i + 1}</span>}
                 </div>
                 <div className="flex-1 text-left min-w-0">
                   <p className="font-semibold text-sm truncate">{data?.name ?? `空位 ${i + 1}`}</p>
                   {data && (
                     <p className="text-[10px] text-muted-foreground truncate">
-                      {slot.nature} · {slot.item} · EV {evTotal}/508
+                      {slot.nature} · {slot.item} · EV {evTotal}/{EV_TOTAL_CAP}
                     </p>
                   )}
                 </div>
@@ -78,12 +74,7 @@ const TeamEditor = ({
                   </SelectTrigger>
                   <SelectContent className="max-h-72">
                     {POKEMON.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        <span className="flex items-center gap-2">
-                          <img src={p.sprite} alt="" className="w-5 h-5 object-contain" />
-                          {p.name}
-                        </span>
-                      </SelectItem>
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -127,7 +118,7 @@ const TeamEditor = ({
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="font-semibold">努力值 (EVs)</span>
-                        <span className="font-mono text-muted-foreground">{evTotal}/508</span>
+                        <span className="font-mono text-muted-foreground">{evTotal}/{EV_TOTAL_CAP}</span>
                       </div>
                       {STATS.map(({ key, label }) => {
                         const ev = slot.evs[key];
@@ -142,8 +133,8 @@ const TeamEditor = ({
                             <Slider
                               value={[ev]}
                               min={0}
-                              max={252}
-                              step={4}
+                              max={EV_INDIVIDUAL_CAP}
+                              step={1}
                               onValueChange={([v]) => updateEv(i, key, v)}
                               className="flex-1"
                             />

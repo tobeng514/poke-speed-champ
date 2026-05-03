@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useTeams } from "@/hooks/useTeams";
 import type { TeamSlot, Team } from "@/types/team";
 import { emptyTeam } from "@/types/team";
-import { findPokemon } from "@/data/pokemon";
+import { findPokemon, POKEMON } from "@/data/pokemon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import TeamEditor from "@/components/TeamEditor";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { Check, Pencil, Plus, Star, Trash2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TeamPage = () => {
@@ -16,21 +17,22 @@ const TeamPage = () => {
   const [editing, setEditing] = useState<{ team?: Team; slots: TeamSlot[]; name: string } | null>(null);
   const { toast } = useToast();
 
-  const startNew = () => setEditing({ slots: emptyTeam(), name: "" });
+  const nextDefaultName = () => {
+    const used = new Set(teams.map((t) => t.name));
+    let i = 1;
+    while (used.has(`新建隊伍${i}`)) i++;
+    return `新建隊伍${i}`;
+  };
+
+  const startNew = () => setEditing({ slots: emptyTeam(), name: nextDefaultName() });
   const startEdit = (t: Team) => setEditing({ team: t, slots: [...t.slots], name: t.name });
 
   const handleSave = async () => {
     if (!editing) return;
-    if (!editing.name.trim()) {
-      toast({ title: "請輸入隊伍名稱", variant: "destructive" });
-      return;
-    }
+    const finalName = editing.name.trim() || nextDefaultName();
     try {
-      const saved = await saveTeam(editing.name.trim(), editing.slots, editing.team?.id);
-      if (saved && !editing.team) {
-        // new team -> set as active
-        await setBothActiveTeams(saved.id);
-      }
+      const saved = await saveTeam(finalName, editing.slots, editing.team?.id);
+      if (saved && !editing.team) await setBothActiveTeams(saved.id);
       toast({ title: "已儲存" });
       setEditing(null);
     } catch (e: any) {
@@ -39,9 +41,8 @@ const TeamPage = () => {
   };
 
   return (
-    <div className="px-4 pt-[env(safe-area-inset-top)]">
-      <header className="py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold">隊伍</h1>
+    <div className="px-4">
+      <header className="py-3 flex items-center justify-end">
         <Button size="sm" onClick={startNew}>
           <Plus className="w-4 h-4" /> 新建
         </Button>
@@ -85,12 +86,8 @@ const TeamPage = () => {
                   {t.slots.map((s, i) => {
                     const p = findPokemon(s.id);
                     return (
-                      <div key={i} className="w-12 h-12 rounded-lg bg-secondary/50 flex items-center justify-center shrink-0">
-                        {p ? (
-                          <img src={p.sprite} alt={p.name} className="w-11 h-11 object-contain" loading="lazy" />
-                        ) : (
-                          <span className="text-[10px] text-muted-foreground">空</span>
-                        )}
+                      <div key={i} className="w-12 h-12 rounded-lg bg-secondary/50 flex items-center justify-center shrink-0 text-sm text-muted-foreground">
+                        {p ? "?" : "—"}
                       </div>
                     );
                   })}
@@ -108,11 +105,19 @@ const TeamPage = () => {
           </SheetHeader>
           {editing && (
             <>
-              <div className="px-4 py-3 border-b border-border">
+              <div className="px-4 py-3 border-b border-border space-y-2">
                 <Input
-                  placeholder="隊伍名稱"
+                  placeholder={nextDefaultName()}
                   value={editing.name}
                   onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                />
+                <BagPicker
+                  slots={editing.slots}
+                  onPick={(idx, id) => {
+                    const next = [...editing.slots];
+                    next[idx] = { ...next[idx], id };
+                    setEditing({ ...editing, slots: next });
+                  }}
                 />
               </div>
               <div className="flex-1 overflow-y-auto p-3">
@@ -129,6 +134,53 @@ const TeamPage = () => {
           )}
         </SheetContent>
       </Sheet>
+    </div>
+  );
+};
+
+const BagPicker = ({
+  slots,
+  onPick,
+}: {
+  slots: TeamSlot[];
+  onPick: (slotIdx: number, pokemonId: string) => void;
+}) => {
+  const [openSlot, setOpenSlot] = useState<number | null>(null);
+  return (
+    <div className="grid grid-cols-6 gap-1.5">
+      {slots.map((s, i) => {
+        const p = findPokemon(s.id);
+        return (
+          <Popover
+            key={i}
+            open={openSlot === i}
+            onOpenChange={(o) => setOpenSlot(o ? i : null)}
+          >
+            <PopoverTrigger asChild>
+              <button className="aspect-square rounded-lg border border-border bg-card flex flex-col items-center justify-center text-[10px] text-muted-foreground active:scale-95 transition">
+                <span className="text-base">?</span>
+                <span className="truncate w-full px-0.5">{p ? p.name.split("-")[0].slice(0, 5) : `+${i + 1}`}</span>
+                <ChevronDown className="w-3 h-3 opacity-50" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0 w-64" align="start">
+              <div className="p-2 border-b text-[11px] font-semibold text-muted-foreground">背包 — 揀 Pokémon</div>
+              <ul className="max-h-72 overflow-y-auto py-1">
+                {POKEMON.map((pp) => (
+                  <li key={pp.id}>
+                    <button
+                      className="w-full text-left px-3 py-2 hover:bg-secondary text-sm"
+                      onClick={() => { onPick(i, pp.id); setOpenSlot(null); }}
+                    >
+                      {pp.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </PopoverContent>
+          </Popover>
+        );
+      })}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ const Auth = () => {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [idName, setIdName] = useState("");
   const [busy, setBusy] = useState(false);
   const { toast } = useToast();
   const nav = useNavigate();
@@ -20,12 +20,17 @@ const Auth = () => {
     setBusy(true);
     try {
       if (mode === "signup") {
+        if (!idName.trim()) {
+          toast({ title: "請輸入 ID Name", variant: "destructive" });
+          setBusy(false);
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { display_name: name || email.split("@")[0] },
+            data: { id_name: idName.trim(), display_name: idName.trim() },
           },
         });
         if (error) throw error;
@@ -49,15 +54,20 @@ const Auth = () => {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-ally to-enemy bg-clip-text text-transparent">
             PokeSpeed Champ
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">VGC 對戰速查工具</p>
         </div>
 
         <form onSubmit={submit} className="space-y-3 bg-card border border-border rounded-2xl p-5">
           <h2 className="text-lg font-semibold">{mode === "signin" ? "登入" : "註冊"}</h2>
           {mode === "signup" && (
             <div className="space-y-1.5">
-              <Label htmlFor="name">名稱</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+              <Label htmlFor="idname">ID Name</Label>
+              <Input
+                id="idname"
+                value={idName}
+                onChange={(e) => setIdName(e.target.value)}
+                placeholder="可重複、任何文字皆可"
+                required
+              />
             </div>
           )}
           <div className="space-y-1.5">

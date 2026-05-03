@@ -11,7 +11,9 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { Sun, CloudRain, Wind, Snowflake, Repeat2, RotateCcw, Users, ChevronDown } from "lucide-react";
+import { Sun, CloudRain, Wind, Snowflake, Repeat2, RotateCcw, Users, ChevronDown, Camera, Image as ImageIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useToast } from "@/hooks/use-toast";
 
 type Weather = "none" | "sun" | "rain" | "sand" | "snow";
 type Side = "ally" | "enemy";
@@ -36,7 +38,9 @@ interface Row {
 }
 
 const PokeSpeedChamp = () => {
-  const { battleTeam } = useTeams();
+  const { teams, battleTeam, setActiveTeam } = useTeams();
+  const { toast } = useToast();
+  const notImpl = (label: string) => toast({ title: `${label}（即將推出）` });
   const [ally, setAlly] = useState<BattleSlot[]>(emptyBattleTeam());
   const [enemy, setEnemy] = useState<BattleSlot[]>(emptyBattleTeam());
   const [allyTW, setAllyTW] = useState(false);
@@ -106,22 +110,73 @@ const PokeSpeedChamp = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
+      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="px-4 py-3 flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-ally to-enemy bg-clip-text text-transparent">
-              對戰 Speed Tier
-            </h1>
+            <h1 className="text-lg font-bold tracking-tight">對戰</h1>
             <p className="text-[10px] text-muted-foreground -mt-0.5">
               {battleTeam ? `當前隊伍：${battleTeam.name}` : "未設置當前隊伍"}
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={reset} className="h-9 px-2">
-            <RotateCcw className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" onClick={() => notImpl("拍照識別")} className="h-9 px-2" aria-label="拍照">
+              <Camera className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => notImpl("匯入截圖")} className="h-9 px-2" aria-label="匯入截圖">
+              <ImageIcon className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={reset} className="h-9 px-2">
+              <RotateCcw className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
         <div className="px-4 pb-3 grid grid-cols-2 gap-2">
-          <TeamChip side="ally" count={allyCount} onClick={() => setTeamSheet("ally")} />
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="rounded-xl border-2 border-ally/40 bg-ally-bg/40 p-2.5 flex items-center justify-between active:scale-95 transition-transform">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-ally" />
+                  <span className="text-xs font-bold uppercase tracking-wider truncate max-w-[7rem]">
+                    {battleTeam ? battleTeam.name : "我方"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-mono font-bold">{allyCount}/6</span>
+                  <ChevronDown className="w-4 h-4 opacity-60" />
+                </div>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-64 p-2">
+              <button
+                className="w-full text-left text-sm px-3 py-2 rounded hover:bg-secondary"
+                onClick={() => setTeamSheet("ally")}
+              >
+                ✏️ 編輯個別 Pokémon
+              </button>
+              <div className="h-px bg-border my-1" />
+              <p className="px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">快速切換隊伍</p>
+              {teams.length === 0 ? (
+                <p className="px-3 py-2 text-xs text-muted-foreground">未有隊伍</p>
+              ) : (
+                <ul className="max-h-56 overflow-y-auto">
+                  {teams.map((t) => (
+                    <li key={t.id}>
+                      <button
+                        className={cn(
+                          "w-full text-left text-sm px-3 py-2 rounded hover:bg-secondary flex items-center justify-between",
+                          battleTeam?.id === t.id && "text-primary font-semibold"
+                        )}
+                        onClick={() => setActiveTeam("battle", t.id)}
+                      >
+                        <span className="truncate">{t.name}</span>
+                        {battleTeam?.id === t.id && <span className="text-[10px]">✓</span>}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </PopoverContent>
+          </Popover>
           <TeamChip side="enemy" count={enemyCount} onClick={() => setTeamSheet("enemy")} />
         </div>
       </header>
@@ -151,7 +206,7 @@ const PokeSpeedChamp = () => {
                 <div className={cn("text-xs font-mono w-6 text-center", r.side === "ally" ? "text-ally" : "text-enemy")}>
                   #{i + 1}
                 </div>
-                <img src={r.data.sprite} alt={r.data.name} className="w-12 h-12 object-contain shrink-0" loading="lazy" />
+                <div className="w-12 h-12 rounded-lg bg-secondary/40 flex items-center justify-center text-xl font-bold text-muted-foreground shrink-0">?</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="font-semibold text-sm truncate">{r.slot.nickname || r.data.name}</span>
@@ -264,12 +319,7 @@ const BattleSlotEditor = ({
         </SelectTrigger>
         <SelectContent className="max-h-72">
           {POKEMON.map((p) => (
-            <SelectItem key={p.id} value={p.id}>
-              <span className="flex items-center gap-2">
-                <img src={p.sprite} alt="" className="w-6 h-6 object-contain" />
-                {p.name}
-              </span>
-            </SelectItem>
+            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
           ))}
         </SelectContent>
       </Select>
