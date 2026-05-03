@@ -50,12 +50,8 @@ const TeamEditor = ({
           <Collapsible key={i} open={open} onOpenChange={(v) => setOpenIdx(v ? i : null)}>
             <div className="rounded-xl border border-border bg-card overflow-hidden">
               <CollapsibleTrigger className="w-full flex items-center gap-3 p-3 active:bg-secondary/40">
-                <div className="w-10 h-10 rounded-lg bg-secondary/50 flex items-center justify-center shrink-0">
-                  {data ? (
-                    <img src={data.sprite} alt="" className="w-10 h-10 object-contain" />
-                  ) : (
-                    <span className="text-[10px] text-muted-foreground">{i + 1}</span>
-                  )}
+                <div className="w-10 h-10 rounded-lg bg-secondary/50 flex items-center justify-center shrink-0 text-sm text-muted-foreground">
+                  {data ? "?" : <span className="text-[10px]">{i + 1}</span>}
                 </div>
                 <div className="flex-1 text-left min-w-0">
                   <p className="font-semibold text-sm truncate">{data?.name ?? `空位 ${i + 1}`}</p>
