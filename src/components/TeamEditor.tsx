@@ -127,7 +127,7 @@ const TeamEditor = ({
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="font-semibold">努力值 (EVs)</span>
-                        <span className="font-mono text-muted-foreground">{evTotal}/508</span>
+                        <span className="font-mono text-muted-foreground">{evTotal}/{EV_TOTAL_CAP}</span>
                       </div>
                       {STATS.map(({ key, label }) => {
                         const ev = slot.evs[key];
@@ -142,8 +142,8 @@ const TeamEditor = ({
                             <Slider
                               value={[ev]}
                               min={0}
-                              max={252}
-                              step={4}
+                              max={EV_INDIVIDUAL_CAP}
+                              step={1}
                               onValueChange={([v]) => updateEv(i, key, v)}
                               className="flex-1"
                             />
