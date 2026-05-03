@@ -58,9 +58,8 @@ const AppShell = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
-        <div className="px-2 h-14 flex items-center gap-1">
+        <div className="px-2 h-14 flex items-center">
           <AppMenu />
-          <h1 className="flex-1 text-base font-semibold truncate">{title}</h1>
         </div>
       </header>
 
