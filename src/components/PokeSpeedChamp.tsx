@@ -107,19 +107,25 @@ const PokeSpeedChamp = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
+      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="px-4 py-3 flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-ally to-enemy bg-clip-text text-transparent">
-              對戰 Speed Tier
-            </h1>
+            <h1 className="text-lg font-bold tracking-tight">對戰</h1>
             <p className="text-[10px] text-muted-foreground -mt-0.5">
               {battleTeam ? `當前隊伍：${battleTeam.name}` : "未設置當前隊伍"}
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={reset} className="h-9 px-2">
-            <RotateCcw className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" onClick={() => useToastImport()} className="h-9 px-2" aria-label="拍照">
+              <Camera className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => useToastImport()} className="h-9 px-2" aria-label="匯入截圖">
+              <ImageIcon className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={reset} className="h-9 px-2">
+              <RotateCcw className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
         <div className="px-4 pb-3 grid grid-cols-2 gap-2">
           <TeamChip side="ally" count={allyCount} onClick={() => setTeamSheet("ally")} />
