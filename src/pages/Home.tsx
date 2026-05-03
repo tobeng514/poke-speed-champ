@@ -3,25 +3,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { findPokemon, calcHp } from "@/data/pokemon";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { LogOut } from "lucide-react";
 
 const Home = () => {
   const { homeTeam, loading } = useTeams();
-  const { signOut, user } = useAuth();
+  const { profile } = useAuth();
 
   return (
-    <div className="px-4 pt-[env(safe-area-inset-top)]">
-      <header className="py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-ally to-enemy bg-clip-text text-transparent">
-            主頁
-          </h1>
-          <p className="text-[11px] text-muted-foreground">{user?.email}</p>
-        </div>
-        <Button variant="ghost" size="icon" onClick={signOut}>
-          <LogOut className="w-4 h-4" />
-        </Button>
-      </header>
+    <div className="px-4">
+      <div className="py-3">
+        <p className="text-[11px] uppercase tracking-widest text-muted-foreground">歡迎</p>
+        <p className="text-lg font-bold">{profile?.id_name ?? "—"}</p>
+      </div>
 
       {loading ? (
         <div className="text-center text-sm text-muted-foreground py-20">Loading…</div>
@@ -62,8 +54,10 @@ const Home = () => {
                   key={i}
                   className="rounded-2xl border border-border bg-gradient-to-b from-card to-secondary/40 p-3 flex flex-col items-center"
                 >
-                  <img src={data.sprite} alt={data.name} className="w-24 h-24 object-contain" loading="lazy" />
-                  <p className="text-sm font-semibold text-center truncate w-full">
+                  <div className="w-24 h-24 rounded-xl bg-secondary/40 flex items-center justify-center text-4xl text-muted-foreground">
+                    ?
+                  </div>
+                  <p className="text-sm font-semibold text-center truncate w-full mt-2">
                     {slot.nickname || data.name}
                   </p>
                   <div className="mt-2 w-full">
