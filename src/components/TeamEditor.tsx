@@ -36,8 +36,8 @@ const TeamEditor = ({
     const others = (Object.keys(slot.evs) as StatKey[])
       .filter((x) => x !== k)
       .reduce((sum, x) => sum + slot.evs[x], 0);
-    const max = Math.min(252, 508 - others);
-    update(i, { evs: { ...slot.evs, [k]: Math.min(max, Math.max(0, v)) } });
+    const max = Math.min(EV_INDIVIDUAL_CAP, EV_TOTAL_CAP - others);
+    update(i, { evs: { ...slot.evs, [k]: Math.min(max, Math.max(0, Math.round(v))) } });
   };
 
   return (
