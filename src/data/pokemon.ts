@@ -122,17 +122,22 @@ export const ITEMS = [
 ] as const;
 export type Item = typeof ITEMS[number];
 
+// ---------------- EV system (custom: 1 EV = 1 stat point) ----------------
+// Total cap: 66, individual cap: 32, step: 1.
+export const EV_TOTAL_CAP = 66;
+export const EV_INDIVIDUAL_CAP = 32;
+
 // ---------------- Stat formulas (Lv50) ----------------
-// HP: floor((2*base+IV+floor(EV/4))*Level/100)+Level+10
+// HP base: floor((2*base+IV)*Level/100)+Level+10, then EV adds 1:1.
 export const calcHp = (base: number, iv: number, ev: number, level = 50): number =>
-  Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100) + level + 10;
+  Math.floor(((2 * base + iv) * level) / 100) + level + 10 + ev;
 
-// Other stat: floor((floor((2*base+IV+floor(EV/4))*Level/100)+5) * nature)
+// Other stat base: floor((floor((2*base+IV)*Level/100)+5) * nature), then EV adds 1:1.
 export const calcStat = (base: number, iv: number, ev: number, natureMod: number, level = 50): number =>
-  Math.floor((Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100) + 5) * natureMod);
+  Math.floor((Math.floor(((2 * base + iv) * level) / 100) + 5) * natureMod) + ev;
 
-// Backward-compat: max-speed shortcut (31 IV, 252 EV, +Speed nature)
-export const calcMaxSpeed = (base: number): number => calcStat(base, 31, 252, 1.1);
+// Backward-compat: max-speed shortcut (31 IV, 32 EV, +Speed nature)
+export const calcMaxSpeed = (base: number): number => calcStat(base, 31, EV_INDIVIDUAL_CAP, 1.1);
 
 // Stat stage multiplier
 export const stageMultiplier = (stage: number): number => {
