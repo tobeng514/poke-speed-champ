@@ -131,7 +131,52 @@ const PokeSpeedChamp = () => {
           </div>
         </div>
         <div className="px-4 pb-3 grid grid-cols-2 gap-2">
-          <TeamChip side="ally" count={allyCount} onClick={() => setTeamSheet("ally")} />
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="rounded-xl border-2 border-ally/40 bg-ally-bg/40 p-2.5 flex items-center justify-between active:scale-95 transition-transform">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-ally" />
+                  <span className="text-xs font-bold uppercase tracking-wider truncate max-w-[7rem]">
+                    {battleTeam ? battleTeam.name : "我方"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-mono font-bold">{allyCount}/6</span>
+                  <ChevronDown className="w-4 h-4 opacity-60" />
+                </div>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-64 p-2">
+              <button
+                className="w-full text-left text-sm px-3 py-2 rounded hover:bg-secondary"
+                onClick={() => setTeamSheet("ally")}
+              >
+                ✏️ 編輯個別 Pokémon
+              </button>
+              <div className="h-px bg-border my-1" />
+              <p className="px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">快速切換隊伍</p>
+              {teams.length === 0 ? (
+                <p className="px-3 py-2 text-xs text-muted-foreground">未有隊伍</p>
+              ) : (
+                <ul className="max-h-56 overflow-y-auto">
+                  {teams.map((t) => (
+                    <li key={t.id}>
+                      <button
+                        className={cn(
+                          "w-full text-left text-sm px-3 py-2 rounded hover:bg-secondary flex items-center justify-between",
+                          battleTeam?.id === t.id && "text-primary font-semibold"
+                        )}
+                        onClick={() => setActiveTeam("battle", t.id)}
+                      >
+                        <span className="truncate">{t.name}</span>
+                        {battleTeam?.id === t.id && <span className="text-[10px]">✓</span>}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </PopoverContent>
+          </Popover>
           <TeamChip side="enemy" count={enemyCount} onClick={() => setTeamSheet("enemy")} />
         </div>
       </header>
