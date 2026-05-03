@@ -206,7 +206,7 @@ const PokeSpeedChamp = () => {
                 <div className={cn("text-xs font-mono w-6 text-center", r.side === "ally" ? "text-ally" : "text-enemy")}>
                   #{i + 1}
                 </div>
-                <img src={r.data.sprite} alt={r.data.name} className="w-12 h-12 object-contain shrink-0" loading="lazy" />
+                <div className="w-12 h-12 rounded-lg bg-secondary/40 flex items-center justify-center text-xl font-bold text-muted-foreground shrink-0">?</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="font-semibold text-sm truncate">{r.slot.nickname || r.data.name}</span>
