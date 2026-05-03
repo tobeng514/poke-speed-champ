@@ -119,10 +119,10 @@ const PokeSpeedChamp = () => {
             </p>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" onClick={() => useToastImport()} className="h-9 px-2" aria-label="拍照">
+            <Button variant="ghost" size="sm" onClick={() => notImpl("拍照識別")} className="h-9 px-2" aria-label="拍照">
               <Camera className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => useToastImport()} className="h-9 px-2" aria-label="匯入截圖">
+            <Button variant="ghost" size="sm" onClick={() => notImpl("匯入截圖")} className="h-9 px-2" aria-label="匯入截圖">
               <ImageIcon className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="sm" onClick={reset} className="h-9 px-2">
