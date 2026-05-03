@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { TeamSlot } from "@/types/team";
-import { POKEMON, NATURES, ITEMS, findPokemon, calcHp, calcStat, speedNatureMod } from "@/data/pokemon";
+import { POKEMON, NATURES, ITEMS, findPokemon, calcHp, calcStat, speedNatureMod, EV_TOTAL_CAP, EV_INDIVIDUAL_CAP } from "@/data/pokemon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
