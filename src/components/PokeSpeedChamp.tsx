@@ -38,7 +38,9 @@ interface Row {
 }
 
 const PokeSpeedChamp = () => {
-  const { battleTeam } = useTeams();
+  const { teams, battleTeam, setActiveTeam } = useTeams();
+  const { toast } = useToast();
+  const notImpl = (label: string) => toast({ title: `${label}（即將推出）` });
   const [ally, setAlly] = useState<BattleSlot[]>(emptyBattleTeam());
   const [enemy, setEnemy] = useState<BattleSlot[]>(emptyBattleTeam());
   const [allyTW, setAllyTW] = useState(false);
