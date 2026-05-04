@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { findPokemon, calcHp } from "@/data/pokemon";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import PokemonAvatar from "@/components/PokemonAvatar";
 
 const Home = () => {
   const { homeTeam, loading } = useTeams();
@@ -11,7 +12,6 @@ const Home = () => {
   return (
     <div className="px-4">
       <div className="py-3">
-        <p className="text-[11px] uppercase tracking-widest text-muted-foreground">歡迎</p>
         <p className="text-lg font-bold">{profile?.id_name ?? "—"}</p>
       </div>
 
