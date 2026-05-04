@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { findPokemon, calcHp } from "@/data/pokemon";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import PokemonAvatar from "@/components/PokemonAvatar";
 
 const Home = () => {
   const { homeTeam, loading } = useTeams();
@@ -11,7 +12,6 @@ const Home = () => {
   return (
     <div className="px-4">
       <div className="py-3">
-        <p className="text-[11px] uppercase tracking-widest text-muted-foreground">歡迎</p>
         <p className="text-lg font-bold">{profile?.id_name ?? "—"}</p>
       </div>
 
@@ -54,9 +54,7 @@ const Home = () => {
                   key={i}
                   className="rounded-2xl border border-border bg-gradient-to-b from-card to-secondary/40 p-3 flex flex-col items-center"
                 >
-                  <div className="w-24 h-24 rounded-xl bg-secondary/40 flex items-center justify-center text-4xl text-muted-foreground">
-                    ?
-                  </div>
+                  <PokemonAvatar pokemonId={data.id} size="lg" />
                   <p className="text-sm font-semibold text-center truncate w-full mt-2">
                     {slot.nickname || data.name}
                   </p>

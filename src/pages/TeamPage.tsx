@@ -1,20 +1,24 @@
 import { useState } from "react";
 import { useTeams } from "@/hooks/useTeams";
+import { useBag } from "@/hooks/useBag";
 import type { TeamSlot, Team } from "@/types/team";
 import { emptyTeam } from "@/types/team";
-import { findPokemon, POKEMON } from "@/data/pokemon";
+import { findPokemon } from "@/data/pokemon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import TeamEditor from "@/components/TeamEditor";
+import PokemonAvatar from "@/components/PokemonAvatar";
+import PokemonPickerDialog from "@/components/PokemonPickerDialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Pencil, Plus, Star, Trash2, ChevronDown } from "lucide-react";
+import { Check, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TeamPage = () => {
   const { teams, settings, saveTeam, deleteTeam, setBothActiveTeams, loading } = useTeams();
   const [editing, setEditing] = useState<{ team?: Team; slots: TeamSlot[]; name: string } | null>(null);
+  const [picking, setPicking] = useState(false);
   const { toast } = useToast();
 
   const nextDefaultName = () => {
@@ -82,15 +86,10 @@ const TeamPage = () => {
                     </Button>
                   </div>
                 </div>
-                <div className="flex gap-1.5 overflow-x-auto">
-                  {t.slots.map((s, i) => {
-                    const p = findPokemon(s.id);
-                    return (
-                      <div key={i} className="w-12 h-12 rounded-lg bg-secondary/50 flex items-center justify-center shrink-0 text-sm text-muted-foreground">
-                        {p ? "?" : "—"}
-                      </div>
-                    );
-                  })}
+                <div className="grid grid-cols-6 gap-1.5">
+                  {t.slots.map((s, i) => (
+                    <PokemonAvatar key={i} pokemonId={s.id ?? ""} size="sm" interactive={false} />
+                  ))}
                 </div>
               </li>
             );
@@ -111,14 +110,21 @@ const TeamPage = () => {
                   value={editing.name}
                   onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                 />
-                <BagPicker
-                  slots={editing.slots}
-                  onPick={(idx, id) => {
-                    const next = [...editing.slots];
-                    next[idx] = { ...next[idx], id };
-                    setEditing({ ...editing, slots: next });
-                  }}
-                />
+                <div className="grid grid-cols-6 gap-1.5">
+                  {editing.slots.map((s, i) => (
+                    <button key={i} onClick={() => {
+                      const next = [...editing.slots];
+                      next[i] = { ...next[i], id: null };
+                      setEditing({ ...editing, slots: next });
+                    }}
+                      className="aspect-square rounded-lg border border-dashed border-border bg-card flex items-center justify-center">
+                      {s.id ? <PokemonAvatar pokemonId={s.id} size="sm" interactive={false} /> : <Plus className="w-4 h-4 text-muted-foreground" />}
+                    </button>
+                  ))}
+                </div>
+                <Button variant="outline" className="w-full" onClick={() => setPicking(true)}>
+                  <Plus className="w-4 h-4" /> 從背包選 Pokémon
+                </Button>
               </div>
               <div className="flex-1 overflow-y-auto p-3">
                 <TeamEditor
@@ -130,6 +136,25 @@ const TeamPage = () => {
                 <Button variant="outline" className="flex-1" onClick={() => setEditing(null)}>取消</Button>
                 <Button className="flex-1" onClick={handleSave}>儲存</Button>
               </div>
+
+              <BagSelectDialog
+                open={picking}
+                onOpenChange={setPicking}
+                currentSlots={editing.slots}
+                onConfirm={(picked) => {
+                  const next = [...editing.slots];
+                  // fill empty slots first; replace later if needed
+                  let idx = 0;
+                  for (const id of picked) {
+                    while (idx < 6 && next[idx]?.id) idx++;
+                    if (idx >= 6) break;
+                    next[idx] = { ...next[idx], id };
+                    idx++;
+                  }
+                  setEditing({ ...editing, slots: next });
+                  setPicking(false);
+                }}
+              />
             </>
           )}
         </SheetContent>
@@ -138,50 +163,82 @@ const TeamPage = () => {
   );
 };
 
-const BagPicker = ({
-  slots,
-  onPick,
+const BagSelectDialog = ({
+  open, onOpenChange, currentSlots, onConfirm,
 }: {
-  slots: TeamSlot[];
-  onPick: (slotIdx: number, pokemonId: string) => void;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  currentSlots: TeamSlot[];
+  onConfirm: (picked: string[]) => void;
 }) => {
-  const [openSlot, setOpenSlot] = useState<number | null>(null);
+  const { bag, add } = useBag();
+  const [selected, setSelected] = useState<string[]>([]);
+  const [addOpen, setAddOpen] = useState(false);
+  const { toast } = useToast();
+
+  const filledCount = currentSlots.filter((s) => s.id).length;
+  const remaining = 6 - filledCount;
+
+  const toggle = (id: string) => {
+    if (selected.includes(id)) setSelected(selected.filter((x) => x !== id));
+    else if (selected.length < remaining) setSelected([...selected, id]);
+    else toast({ title: `最多揀 ${remaining} 隻` });
+  };
+
   return (
-    <div className="grid grid-cols-6 gap-1.5">
-      {slots.map((s, i) => {
-        const p = findPokemon(s.id);
-        return (
-          <Popover
-            key={i}
-            open={openSlot === i}
-            onOpenChange={(o) => setOpenSlot(o ? i : null)}
-          >
-            <PopoverTrigger asChild>
-              <button className="aspect-square rounded-lg border border-border bg-card flex flex-col items-center justify-center text-[10px] text-muted-foreground active:scale-95 transition">
-                <span className="text-base">?</span>
-                <span className="truncate w-full px-0.5">{p ? p.name.split("-")[0].slice(0, 5) : `+${i + 1}`}</span>
-                <ChevronDown className="w-3 h-3 opacity-50" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0 w-64" align="start">
-              <div className="p-2 border-b text-[11px] font-semibold text-muted-foreground">背包 — 揀 Pokémon</div>
-              <ul className="max-h-72 overflow-y-auto py-1">
-                {POKEMON.map((pp) => (
-                  <li key={pp.id}>
-                    <button
-                      className="w-full text-left px-3 py-2 hover:bg-secondary text-sm"
-                      onClick={() => { onPick(i, pp.id); setOpenSlot(null); }}
-                    >
-                      {pp.name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </PopoverContent>
-          </Popover>
-        );
-      })}
-    </div>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) setSelected([]); onOpenChange(o); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle>從背包選（{selected.length}/{remaining}）</DialogTitle>
+            <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
+              <Plus className="w-4 h-4" /> 新增
+            </Button>
+          </div>
+        </DialogHeader>
+        {bag.length === 0 ? (
+          <p className="text-center text-sm text-muted-foreground py-8">背包係空，撳「新增」加入 Pokémon</p>
+        ) : (
+          <div className="grid grid-cols-5 gap-2 max-h-[55vh] overflow-y-auto">
+            {bag.map((b) => {
+              const data = findPokemon(b.pokemon_id);
+              const sel = selected.includes(b.pokemon_id);
+              return (
+                <button key={b.id} onClick={() => toggle(b.pokemon_id)}
+                  className={cn(
+                    "flex flex-col items-center gap-1 p-1.5 rounded-xl border transition active:scale-95",
+                    sel ? "border-primary bg-primary/10 ring-2 ring-primary" : "border-border bg-card"
+                  )}>
+                  <PokemonAvatar pokemonId={b.pokemon_id} size="sm" interactive={false} />
+                  <span className="text-[10px] truncate w-full text-center">
+                    {b.nickname || data?.name.split("-")[0]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <div className="flex gap-2 pt-2">
+          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>取消</Button>
+          <Button className="flex-1" disabled={selected.length === 0} onClick={() => { onConfirm(selected); setSelected([]); }}>
+            確認
+          </Button>
+        </div>
+
+        <PokemonPickerDialog
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          title="加入背包 + 隊伍"
+          onPick={async (id) => {
+            try {
+              await add(id);
+              if (selected.length < remaining) setSelected([...selected, id]);
+              toast({ title: "已加入背包" });
+            } catch (e: any) { toast({ title: "失敗", description: e.message, variant: "destructive" }); }
+          }}
+        />
+      </DialogContent>
+    </Dialog>
   );
 };
 

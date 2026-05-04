@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Menu, BookOpen, Share2, User as UserIcon, Bug, Send, Settings, LogOut, ChevronRight,
+  Menu, BookOpen, Share2, User as UserIcon, Bug, Send, Settings, LogOut, ChevronRight, Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,8 +15,22 @@ type View = "menu" | "account" | "settings";
 const AppMenu = () => {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>("menu");
-  const { profile, user, signOut } = useAuth();
+  const { profile, user, signOut, refreshProfile } = useAuth();
   const { toast } = useToast();
+  const [idDraft, setIdDraft] = useState(profile?.id_name ?? "");
+  const [savingId, setSavingId] = useState(false);
+  useEffect(() => { setIdDraft(profile?.id_name ?? ""); }, [profile?.id_name]);
+
+  const saveIdName = async () => {
+    if (!user) return;
+    const v = idDraft.trim();
+    if (!v) { toast({ title: "ID Name 不可留空", variant: "destructive" }); return; }
+    setSavingId(true);
+    const { error } = await supabase.from("profiles").update({ id_name: v }).eq("id", user.id);
+    setSavingId(false);
+    if (error) toast({ title: "失敗", description: error.message, variant: "destructive" });
+    else { await refreshProfile(); toast({ title: "已更新 ID Name" }); }
+  };
 
   const close = () => { setOpen(false); setTimeout(() => setView("menu"), 200); };
 
@@ -70,7 +86,15 @@ const AppMenu = () => {
               <div className="p-4 space-y-4">
                 <Button variant="ghost" size="sm" onClick={() => setView("menu")}>← 返回</Button>
                 <InfoBlock label="Email" value={user?.email ?? "—"} />
-                <InfoBlock label="ID Name" value={profile?.id_name ?? "—"} />
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">ID Name</p>
+                  <div className="flex gap-2">
+                    <Input value={idDraft} onChange={(e) => setIdDraft(e.target.value)} className="h-9" />
+                    <Button size="sm" onClick={saveIdName} disabled={savingId || idDraft.trim() === (profile?.id_name ?? "")}>
+                      <Check className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">連動帳號</p>
                   {["Google", "Twitch", "X", "Threads", "Instagram", "Facebook"].map((p) => (
