@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      bag_pokemon: {
+        Row: {
+          ability: string | null
+          created_at: string
+          evs: Json
+          id: string
+          item: string | null
+          ivs: Json
+          level: number
+          nature: string | null
+          nickname: string | null
+          pokemon_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ability?: string | null
+          created_at?: string
+          evs?: Json
+          id?: string
+          item?: string | null
+          ivs?: Json
+          level?: number
+          nature?: string | null
+          nickname?: string | null
+          pokemon_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ability?: string | null
+          created_at?: string
+          evs?: Json
+          id?: string
+          item?: string | null
+          ivs?: Json
+          level?: number
+          nature?: string | null
+          nickname?: string | null
+          pokemon_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pokemon_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_path: string
+          pokemon_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_path: string
+          pokemon_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_path?: string
+          pokemon_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
