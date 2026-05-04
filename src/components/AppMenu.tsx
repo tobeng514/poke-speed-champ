@@ -86,7 +86,15 @@ const AppMenu = () => {
               <div className="p-4 space-y-4">
                 <Button variant="ghost" size="sm" onClick={() => setView("menu")}>← 返回</Button>
                 <InfoBlock label="Email" value={user?.email ?? "—"} />
-                <InfoBlock label="ID Name" value={profile?.id_name ?? "—"} />
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">ID Name</p>
+                  <div className="flex gap-2">
+                    <Input value={idDraft} onChange={(e) => setIdDraft(e.target.value)} className="h-9" />
+                    <Button size="sm" onClick={saveIdName} disabled={savingId || idDraft.trim() === (profile?.id_name ?? "")}>
+                      <Check className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">連動帳號</p>
                   {["Google", "Twitch", "X", "Threads", "Instagram", "Facebook"].map((p) => (
