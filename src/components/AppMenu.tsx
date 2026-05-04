@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Menu, BookOpen, Share2, User as UserIcon, Bug, Send, Settings, LogOut, ChevronRight,
+  Menu, BookOpen, Share2, User as UserIcon, Bug, Send, Settings, LogOut, ChevronRight, Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
