@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { POKEMON } from "@/data/pokemon";
-import { POKEMON_TYPES, type PokeType } from "@/data/types"; // not used directly here
 import PokemonAvatar from "./PokemonAvatar";
 
 interface Props {
