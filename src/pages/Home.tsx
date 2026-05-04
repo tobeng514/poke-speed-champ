@@ -54,9 +54,7 @@ const Home = () => {
                   key={i}
                   className="rounded-2xl border border-border bg-gradient-to-b from-card to-secondary/40 p-3 flex flex-col items-center"
                 >
-                  <div className="w-24 h-24 rounded-xl bg-secondary/40 flex items-center justify-center text-4xl text-muted-foreground">
-                    ?
-                  </div>
+                  <PokemonAvatar pokemonId={data.id} size="lg" />
                   <p className="text-sm font-semibold text-center truncate w-full mt-2">
                     {slot.nickname || data.name}
                   </p>
