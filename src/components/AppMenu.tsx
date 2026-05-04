@@ -15,8 +15,22 @@ type View = "menu" | "account" | "settings";
 const AppMenu = () => {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>("menu");
-  const { profile, user, signOut } = useAuth();
+  const { profile, user, signOut, refreshProfile } = useAuth();
   const { toast } = useToast();
+  const [idDraft, setIdDraft] = useState(profile?.id_name ?? "");
+  const [savingId, setSavingId] = useState(false);
+  useEffect(() => { setIdDraft(profile?.id_name ?? ""); }, [profile?.id_name]);
+
+  const saveIdName = async () => {
+    if (!user) return;
+    const v = idDraft.trim();
+    if (!v) { toast({ title: "ID Name 不可留空", variant: "destructive" }); return; }
+    setSavingId(true);
+    const { error } = await supabase.from("profiles").update({ id_name: v }).eq("id", user.id);
+    setSavingId(false);
+    if (error) toast({ title: "失敗", description: error.message, variant: "destructive" });
+    else { await refreshProfile(); toast({ title: "已更新 ID Name" }); }
+  };
 
   const close = () => { setOpen(false); setTimeout(() => setView("menu"), 200); };
 
