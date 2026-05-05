@@ -127,7 +127,8 @@ const Bag = () => {
             const data = findPokemon(b.pokemon_id);
             return (
               <button key={b.id} onClick={() => setEditing(b)}
-                className="flex flex-col items-center gap-1 p-1.5 rounded-xl border border-border bg-card hover:bg-secondary/40 active:scale-95 transition">
+                className="relative flex flex-col items-center gap-1 p-1.5 rounded-xl border border-border bg-card hover:bg-secondary/40 active:scale-95 transition">
+                {b.favorite && <span className="absolute top-0.5 right-1 text-xs">⭐</span>}
                 <PokemonAvatar pokemonId={b.pokemon_id} size="sm" interactive={false} />
                 <span className="text-[10px] truncate w-full text-center font-medium">
                   {b.nickname || data?.name.split("-")[0]}
