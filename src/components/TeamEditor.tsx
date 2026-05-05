@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { TeamSlot } from "@/types/team";
 import { POKEMON, NATURES, ITEMS, findPokemon, calcHp, calcStat, speedNatureMod, EV_TOTAL_CAP, EV_INDIVIDUAL_CAP } from "@/data/pokemon";
+import { fetchPokemon, prettyName } from "@/lib/pokeapi";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type StatKey = "hp" | "atk" | "def" | "spa" | "spd" | "spe";
@@ -26,6 +28,18 @@ const TeamEditor = ({
   onChange: (slots: TeamSlot[]) => void;
 }) => {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
+  const [movesByPid, setMovesByPid] = useState<Record<string, string[]>>({});
+  const [movePicker, setMovePicker] = useState<{ slot: number; idx: number } | null>(null);
+
+  useEffect(() => {
+    const ids = Array.from(new Set(slots.map((s) => s.id).filter(Boolean) as string[]));
+    ids.forEach((id) => {
+      if (!movesByPid[id]) {
+        fetchPokemon(id).then((d) => setMovesByPid((m) => ({ ...m, [id]: d?.moves ?? [] })));
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slots]);
 
   const update = (i: number, patch: Partial<TeamSlot>) => {
     onChange(slots.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
@@ -146,6 +160,29 @@ const TeamEditor = ({
                         );
                       })}
                     </div>
+
+                    <Field label="技能（4 個）">
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {[0, 1, 2, 3].map((mi) => {
+                          const m = (slot.moves ?? [])[mi];
+                          return (
+                            <button key={mi} type="button"
+                              onClick={() => setMovePicker({ slot: i, idx: mi })}
+                              className="h-9 text-xs rounded-md border border-input bg-background flex items-center justify-between px-2 active:scale-95">
+                              <span className={cn("truncate", !m && "text-muted-foreground")}>
+                                {m ? prettyName(m) : `技能 ${mi + 1}`}
+                              </span>
+                              {m && <X className="w-3 h-3 shrink-0 opacity-60" onClick={(e) => {
+                                e.stopPropagation();
+                                const next = [...(slot.moves ?? [])];
+                                next[mi] = "";
+                                update(i, { moves: next });
+                              }} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </Field>
                   </>
                 )}
               </CollapsibleContent>
@@ -153,6 +190,38 @@ const TeamEditor = ({
           </Collapsible>
         );
       })}
+
+      <Dialog open={movePicker !== null} onOpenChange={(o) => !o && setMovePicker(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>選擇技能</DialogTitle></DialogHeader>
+          {movePicker && (() => {
+            const slot = slots[movePicker.slot];
+            const all = (slot?.id && movesByPid[slot.id]) || [];
+            const used = new Set((slot?.moves ?? []).filter(Boolean));
+            return (
+              <div className="max-h-[55vh] overflow-y-auto space-y-1">
+                {all.length === 0 && <p className="text-center text-xs text-muted-foreground py-4">載入中…</p>}
+                {all.slice(0, 300).map((m) => {
+                  const isUsed = used.has(m);
+                  return (
+                    <button key={m} disabled={isUsed} onClick={() => {
+                      const next = [...(slot.moves ?? [])];
+                      while (next.length <= movePicker.idx) next.push("");
+                      next[movePicker.idx] = m;
+                      update(movePicker.slot, { moves: next });
+                      setMovePicker(null);
+                    }}
+                      className={cn("w-full text-left text-sm px-3 py-2 rounded hover:bg-secondary",
+                        isUsed && "opacity-40")}>
+                      {prettyName(m)}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

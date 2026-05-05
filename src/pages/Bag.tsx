@@ -23,10 +23,10 @@ const STATS: { key: StatKey; label: string }[] = [
 ];
 
 const SORT_OPTIONS = [
-  { v: "recent", l: "最近新增" },
-  { v: "name", l: "名字" },
-  { v: "species", l: "種類" },
-  { v: "nickname", l: "暱稱" },
+  { v: "no", l: "編號" },
+  { v: "type", l: "屬性" },
+  { v: "favorite", l: "我的最愛" },
+  { v: "added", l: "加入時間" },
 ] as const;
 type SortKey = typeof SORT_OPTIONS[number]["v"];
 
@@ -37,11 +37,19 @@ const Bag = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<PokeType[]>([]);
-  const [sortKey, setSortKey] = useState<SortKey>(() =>
-    (localStorage.getItem("bag.sort") as SortKey) || "recent");
+  const [sortKey, setSortKey] = useState<SortKey>(() => {
+    const v = localStorage.getItem("bag.sort") as SortKey | null;
+    return (v && SORT_OPTIONS.some((o) => o.v === v)) ? v : "no";
+  });
   const { toast } = useToast();
 
   useEffect(() => { localStorage.setItem("bag.sort", sortKey); }, [sortKey]);
+
+  const speciesIndex = useMemo(() => {
+    const m = new Map<string, number>();
+    POKEMON.forEach((p, i) => m.set(p.id, i));
+    return m;
+  }, []);
 
   const filtered = useMemo(() => {
     let arr = bag.filter((b) => {
@@ -55,19 +63,17 @@ const Bag = () => {
       }
       return true;
     });
-    if (sortKey === "name") {
-      arr = [...arr].sort((a, b) => {
-        const an = (a.nickname || findPokemon(a.pokemon_id)?.name || "").toLowerCase();
-        const bn = (b.nickname || findPokemon(b.pokemon_id)?.name || "").toLowerCase();
-        return an.localeCompare(bn);
-      });
-    } else if (sortKey === "species") {
-      arr = [...arr].sort((a, b) => a.pokemon_id.localeCompare(b.pokemon_id));
-    } else if (sortKey === "nickname") {
-      arr = [...arr].sort((a, b) => (a.nickname || "").localeCompare(b.nickname || ""));
+    if (sortKey === "no") {
+      arr = [...arr].sort((a, b) => (speciesIndex.get(a.pokemon_id) ?? 9999) - (speciesIndex.get(b.pokemon_id) ?? 9999));
+    } else if (sortKey === "type") {
+      arr = [...arr].sort((a, b) => (POKEMON_TYPES[a.pokemon_id]?.[0] ?? "").localeCompare(POKEMON_TYPES[b.pokemon_id]?.[0] ?? ""));
+    } else if (sortKey === "favorite") {
+      arr = [...arr].sort((a, b) => Number(b.favorite ?? false) - Number(a.favorite ?? false));
+    } else if (sortKey === "added") {
+      arr = [...arr].sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
     }
     return arr;
-  }, [bag, search, typeFilter, sortKey]);
+  }, [bag, search, typeFilter, sortKey, speciesIndex]);
 
   const handleAdd = async (id: string) => {
     try { await add(id); toast({ title: "已加入背包" }); }
@@ -121,7 +127,8 @@ const Bag = () => {
             const data = findPokemon(b.pokemon_id);
             return (
               <button key={b.id} onClick={() => setEditing(b)}
-                className="flex flex-col items-center gap-1 p-1.5 rounded-xl border border-border bg-card hover:bg-secondary/40 active:scale-95 transition">
+                className="relative flex flex-col items-center gap-1 p-1.5 rounded-xl border border-border bg-card hover:bg-secondary/40 active:scale-95 transition">
+                {b.favorite && <span className="absolute top-0.5 right-1 text-xs">⭐</span>}
                 <PokemonAvatar pokemonId={b.pokemon_id} size="sm" interactive={false} />
                 <span className="text-[10px] truncate w-full text-center font-medium">
                   {b.nickname || data?.name.split("-")[0]}
@@ -229,7 +236,8 @@ const BagEditor = ({
         nickname: draft.nickname, ability: draft.ability,
         nature: draft.nature, evs: draft.evs,
         moves: (draft.moves ?? []).filter(Boolean),
-      });
+        favorite: draft.favorite,
+      } as any);
       toast({ title: "已儲存" });
       onClose();
     } catch (e: any) { toast({ title: "失敗", description: e.message, variant: "destructive" }); }
@@ -241,7 +249,14 @@ const BagEditor = ({
         <SheetHeader className="px-4 py-3 border-b border-border">
           <SheetTitle className="flex items-center gap-2">
             <PokemonAvatar pokemonId={draft.pokemon_id} size="sm" />
-            <span>{draft.nickname || data.name}</span>
+            <span className="flex-1 text-left">{draft.nickname || data.name}</span>
+            <button
+              onClick={() => setDraft({ ...draft, favorite: !draft.favorite })}
+              className="text-xl leading-none"
+              aria-label="favorite"
+            >
+              {draft.favorite ? "⭐" : "☆"}
+            </button>
           </SheetTitle>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto p-4 space-y-3">

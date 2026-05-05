@@ -9,6 +9,7 @@ import {
   Menu, BookOpen, Share2, User as UserIcon, Bug, Send, Settings, LogOut, ChevronRight, Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT, LANGS } from "@/i18n";
 
 type View = "menu" | "account" | "settings";
 
@@ -175,23 +176,15 @@ const ThemeToggle = () => {
 };
 
 const LanguageSelect = () => {
-  const [lang, setLang] = useState(() => {
-    try { return localStorage.getItem("lang") ?? "zh-HK"; } catch { return "zh-HK"; }
-  });
-  const opts = [
-    { v: "zh-HK", l: "繁體中文（粵）" },
-    { v: "zh-TW", l: "繁體中文（台）" },
-    { v: "en", l: "English" },
-    { v: "ja", l: "日本語" },
-  ];
+  const { lang, setLang } = useT();
   return (
     <div className="space-y-1.5">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">語言</p>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">語言 / Language</p>
       <div className="grid grid-cols-2 gap-1.5">
-        {opts.map((o) => (
+        {LANGS.map((o: any) => (
           <button
             key={o.v}
-            onClick={() => { setLang(o.v); try { localStorage.setItem("lang", o.v); } catch {} }}
+            onClick={() => setLang(o.v)}
             className={cn(
               "px-3 py-2 rounded-lg border text-sm",
               lang === o.v ? "border-primary bg-primary/10 text-primary" : "border-border bg-card"
@@ -201,7 +194,6 @@ const LanguageSelect = () => {
           </button>
         ))}
       </div>
-      <p className="text-[10px] text-muted-foreground px-1 mt-1">部分翻譯即將推出</p>
     </div>
   );
 };

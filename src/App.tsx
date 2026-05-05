@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/i18n";
 import AppShell from "@/components/AppShell";
 import Home from "./pages/Home";
 import TeamPage from "./pages/TeamPage";
@@ -23,18 +24,20 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route element={<AppShell />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/team" element={<TeamPage />} />
-              <Route path="/bag" element={<Bag />} />
-              <Route path="/battle" element={<Battle />} />
-              <Route path="/sim" element={<Sim />} />
-              <Route path="/dex" element={<Dex />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <LanguageProvider>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route element={<AppShell />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/team" element={<TeamPage />} />
+                <Route path="/bag" element={<Bag />} />
+                <Route path="/battle" element={<Battle />} />
+                <Route path="/sim" element={<Sim />} />
+                <Route path="/dex" element={<Dex />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </LanguageProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

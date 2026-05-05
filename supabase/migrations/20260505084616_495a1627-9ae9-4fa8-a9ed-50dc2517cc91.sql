@@ -1,0 +1,1 @@
+ALTER TABLE public.bag_pokemon ADD COLUMN IF NOT EXISTS favorite boolean NOT NULL DEFAULT false;

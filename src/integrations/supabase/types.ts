@@ -19,6 +19,7 @@ export type Database = {
           ability: string | null
           created_at: string
           evs: Json
+          favorite: boolean
           id: string
           item: string | null
           ivs: Json
@@ -34,6 +35,7 @@ export type Database = {
           ability?: string | null
           created_at?: string
           evs?: Json
+          favorite?: boolean
           id?: string
           item?: string | null
           ivs?: Json
@@ -49,6 +51,7 @@ export type Database = {
           ability?: string | null
           created_at?: string
           evs?: Json
+          favorite?: boolean
           id?: string
           item?: string | null
           ivs?: Json
