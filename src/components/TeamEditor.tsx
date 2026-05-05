@@ -28,6 +28,18 @@ const TeamEditor = ({
   onChange: (slots: TeamSlot[]) => void;
 }) => {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
+  const [movesByPid, setMovesByPid] = useState<Record<string, string[]>>({});
+  const [movePicker, setMovePicker] = useState<{ slot: number; idx: number } | null>(null);
+
+  useEffect(() => {
+    const ids = Array.from(new Set(slots.map((s) => s.id).filter(Boolean) as string[]));
+    ids.forEach((id) => {
+      if (!movesByPid[id]) {
+        fetchPokemon(id).then((d) => setMovesByPid((m) => ({ ...m, [id]: d?.moves ?? [] })));
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slots]);
 
   const update = (i: number, patch: Partial<TeamSlot>) => {
     onChange(slots.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
