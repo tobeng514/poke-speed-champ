@@ -112,18 +112,14 @@ const TeamPage = () => {
                 />
                 <div className="grid grid-cols-6 gap-1.5">
                   {editing.slots.map((s, i) => (
-                    <button key={i} onClick={() => {
-                      const next = [...editing.slots];
-                      next[i] = { ...next[i], id: null };
-                      setEditing({ ...editing, slots: next });
-                    }}
+                    <div key={i}
                       className="aspect-square rounded-lg border border-dashed border-border bg-card flex items-center justify-center">
                       {s.id ? <PokemonAvatar pokemonId={s.id} size="sm" interactive={false} /> : <Plus className="w-4 h-4 text-muted-foreground" />}
-                    </button>
+                    </div>
                   ))}
                 </div>
                 <Button variant="outline" className="w-full" onClick={() => setPicking(true)}>
-                  <Plus className="w-4 h-4" /> 從背包選 Pokémon
+                  <span className="text-lg mr-1" role="img" aria-label="bag">🎒</span> 打開背包
                 </Button>
               </div>
               <div className="flex-1 overflow-y-auto p-3">
