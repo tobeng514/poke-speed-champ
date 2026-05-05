@@ -190,6 +190,38 @@ const TeamEditor = ({
           </Collapsible>
         );
       })}
+
+      <Dialog open={movePicker !== null} onOpenChange={(o) => !o && setMovePicker(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>選擇技能</DialogTitle></DialogHeader>
+          {movePicker && (() => {
+            const slot = slots[movePicker.slot];
+            const all = (slot?.id && movesByPid[slot.id]) || [];
+            const used = new Set((slot?.moves ?? []).filter(Boolean));
+            return (
+              <div className="max-h-[55vh] overflow-y-auto space-y-1">
+                {all.length === 0 && <p className="text-center text-xs text-muted-foreground py-4">載入中…</p>}
+                {all.slice(0, 300).map((m) => {
+                  const isUsed = used.has(m);
+                  return (
+                    <button key={m} disabled={isUsed} onClick={() => {
+                      const next = [...(slot.moves ?? [])];
+                      while (next.length <= movePicker.idx) next.push("");
+                      next[movePicker.idx] = m;
+                      update(movePicker.slot, { moves: next });
+                      setMovePicker(null);
+                    }}
+                      className={cn("w-full text-left text-sm px-3 py-2 rounded hover:bg-secondary",
+                        isUsed && "opacity-40")}>
+                      {prettyName(m)}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
