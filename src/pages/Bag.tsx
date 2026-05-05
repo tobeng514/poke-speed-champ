@@ -235,7 +235,8 @@ const BagEditor = ({
         nickname: draft.nickname, ability: draft.ability,
         nature: draft.nature, evs: draft.evs,
         moves: (draft.moves ?? []).filter(Boolean),
-      });
+        favorite: draft.favorite,
+      } as any);
       toast({ title: "已儲存" });
       onClose();
     } catch (e: any) { toast({ title: "失敗", description: e.message, variant: "destructive" }); }
