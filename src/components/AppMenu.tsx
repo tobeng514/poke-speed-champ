@@ -176,8 +176,6 @@ const ThemeToggle = () => {
 };
 
 const LanguageSelect = () => {
-  // Lazy import to avoid circular when provider missing during HMR
-  const { useT, LANGS } = require("@/i18n");
   const { lang, setLang } = useT();
   return (
     <div className="space-y-1.5">
