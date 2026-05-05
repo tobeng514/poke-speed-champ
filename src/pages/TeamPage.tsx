@@ -141,14 +141,25 @@ const TeamPage = () => {
                 open={picking}
                 onOpenChange={setPicking}
                 currentSlots={editing.slots}
-                onConfirm={(picked) => {
+                onConfirm={(pickedBag) => {
                   const next = [...editing.slots];
-                  // fill empty slots first; replace later if needed
                   let idx = 0;
-                  for (const id of picked) {
+                  for (const b of pickedBag) {
                     while (idx < 6 && next[idx]?.id) idx++;
                     if (idx >= 6) break;
-                    next[idx] = { ...next[idx], id };
+                    next[idx] = {
+                      ...next[idx],
+                      id: b.pokemon_id,
+                      bagId: b.id,
+                      nickname: b.nickname ?? undefined,
+                      ability: b.ability ?? undefined,
+                      item: (b.item ?? "None") as any,
+                      nature: (b.nature ?? "Hardy") as any,
+                      evs: b.evs,
+                      ivs: b.ivs,
+                      level: b.level,
+                      moves: b.moves ?? [],
+                    };
                     idx++;
                   }
                   setEditing({ ...editing, slots: next });
@@ -169,19 +180,20 @@ const BagSelectDialog = ({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   currentSlots: TeamSlot[];
-  onConfirm: (picked: string[]) => void;
+  onConfirm: (picked: import("@/hooks/useBag").BagPokemon[]) => void;
 }) => {
   const { bag, add } = useBag();
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string[]>([]); // bag entry ids
   const [addOpen, setAddOpen] = useState(false);
   const { toast } = useToast();
 
   const filledCount = currentSlots.filter((s) => s.id).length;
   const remaining = 6 - filledCount;
+  const usedBagIds = new Set(currentSlots.map((s) => s.bagId).filter(Boolean) as string[]);
 
-  const toggle = (id: string) => {
-    if (selected.includes(id)) setSelected(selected.filter((x) => x !== id));
-    else if (selected.length < remaining) setSelected([...selected, id]);
+  const toggle = (bagId: string) => {
+    if (selected.includes(bagId)) setSelected(selected.filter((x) => x !== bagId));
+    else if (selected.length < remaining) setSelected([...selected, bagId]);
     else toast({ title: `最多揀 ${remaining} 隻` });
   };
 
@@ -202,12 +214,14 @@ const BagSelectDialog = ({
           <div className="grid grid-cols-5 gap-2 max-h-[55vh] overflow-y-auto">
             {bag.map((b) => {
               const data = findPokemon(b.pokemon_id);
-              const sel = selected.includes(b.pokemon_id);
+              const sel = selected.includes(b.id);
+              const inUse = usedBagIds.has(b.id);
               return (
-                <button key={b.id} onClick={() => toggle(b.pokemon_id)}
+                <button key={b.id} disabled={inUse} onClick={() => toggle(b.id)}
                   className={cn(
                     "flex flex-col items-center gap-1 p-1.5 rounded-xl border transition active:scale-95",
-                    sel ? "border-primary bg-primary/10 ring-2 ring-primary" : "border-border bg-card"
+                    sel ? "border-primary bg-primary/10 ring-2 ring-primary" : "border-border bg-card",
+                    inUse && "opacity-40"
                   )}>
                   <PokemonAvatar pokemonId={b.pokemon_id} size="sm" interactive={false} />
                   <span className="text-[10px] truncate w-full text-center">
@@ -220,7 +234,11 @@ const BagSelectDialog = ({
         )}
         <div className="flex gap-2 pt-2">
           <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>取消</Button>
-          <Button className="flex-1" disabled={selected.length === 0} onClick={() => { onConfirm(selected); setSelected([]); }}>
+          <Button className="flex-1" disabled={selected.length === 0} onClick={() => {
+            const picked = bag.filter((b) => selected.includes(b.id));
+            onConfirm(picked);
+            setSelected([]);
+          }}>
             確認
           </Button>
         </div>
@@ -231,8 +249,8 @@ const BagSelectDialog = ({
           title="加入背包 + 隊伍"
           onPick={async (id) => {
             try {
-              await add(id);
-              if (selected.length < remaining) setSelected([...selected, id]);
+              const created = await add(id);
+              if (created && selected.length < remaining) setSelected([...selected, created.id]);
               toast({ title: "已加入背包" });
             } catch (e: any) { toast({ title: "失敗", description: e.message, variant: "destructive" }); }
           }}

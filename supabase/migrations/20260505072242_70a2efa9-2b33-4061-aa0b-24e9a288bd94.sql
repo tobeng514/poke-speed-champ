@@ -1,0 +1,1 @@
+ALTER TABLE public.bag_pokemon ADD COLUMN IF NOT EXISTS moves text[] NOT NULL DEFAULT '{}';

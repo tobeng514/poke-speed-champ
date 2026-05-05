@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-// Map of pokemonId -> signed URL
 type ImageMap = Record<string, string>;
 
 let cache: ImageMap = {};
@@ -53,7 +52,6 @@ export const usePokemonImages = () => {
       .upload(path, file, { upsert: true, contentType: file.type });
     if (upErr) throw upErr;
 
-    // Find old row to delete old object
     const { data: existing } = await supabase
       .from("pokemon_images")
       .select("id, image_path")
@@ -72,5 +70,19 @@ export const usePokemonImages = () => {
     await refresh();
   };
 
-  return { images, refresh, upload };
+  const remove = async (pokemonId: string) => {
+    if (!user) throw new Error("未登入");
+    const { data: existing } = await supabase
+      .from("pokemon_images")
+      .select("id, image_path")
+      .eq("user_id", user.id)
+      .eq("pokemon_id", pokemonId)
+      .maybeSingle();
+    if (!existing) return;
+    await supabase.storage.from("pokemon-images").remove([(existing as any).image_path]);
+    await supabase.from("pokemon_images").delete().eq("id", (existing as any).id);
+    await refresh();
+  };
+
+  return { images, refresh, upload, remove };
 };

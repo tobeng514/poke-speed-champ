@@ -23,6 +23,7 @@ export type Database = {
           item: string | null
           ivs: Json
           level: number
+          moves: string[]
           nature: string | null
           nickname: string | null
           pokemon_id: string
@@ -37,6 +38,7 @@ export type Database = {
           item?: string | null
           ivs?: Json
           level?: number
+          moves?: string[]
           nature?: string | null
           nickname?: string | null
           pokemon_id: string
@@ -51,6 +53,7 @@ export type Database = {
           item?: string | null
           ivs?: Json
           level?: number
+          moves?: string[]
           nature?: string | null
           nickname?: string | null
           pokemon_id?: string

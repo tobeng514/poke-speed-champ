@@ -12,6 +12,7 @@ export interface BagPokemon {
   evs: { hp: number; atk: number; def: number; spa: number; spd: number; spe: number };
   ivs: { hp: number; atk: number; def: number; spa: number; spd: number; spe: number };
   level: number;
+  moves: string[];
 }
 
 export const useBag = () => {
