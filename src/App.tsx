@@ -24,18 +24,20 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route element={<AppShell />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/team" element={<TeamPage />} />
-              <Route path="/bag" element={<Bag />} />
-              <Route path="/battle" element={<Battle />} />
-              <Route path="/sim" element={<Sim />} />
-              <Route path="/dex" element={<Dex />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <LanguageProvider>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route element={<AppShell />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/team" element={<TeamPage />} />
+                <Route path="/bag" element={<Bag />} />
+                <Route path="/battle" element={<Battle />} />
+                <Route path="/sim" element={<Sim />} />
+                <Route path="/dex" element={<Dex />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </LanguageProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
