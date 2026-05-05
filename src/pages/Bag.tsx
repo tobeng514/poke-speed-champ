@@ -248,7 +248,14 @@ const BagEditor = ({
         <SheetHeader className="px-4 py-3 border-b border-border">
           <SheetTitle className="flex items-center gap-2">
             <PokemonAvatar pokemonId={draft.pokemon_id} size="sm" />
-            <span>{draft.nickname || data.name}</span>
+            <span className="flex-1 text-left">{draft.nickname || data.name}</span>
+            <button
+              onClick={() => setDraft({ ...draft, favorite: !draft.favorite })}
+              className="text-xl leading-none"
+              aria-label="favorite"
+            >
+              {draft.favorite ? "⭐" : "☆"}
+            </button>
           </SheetTitle>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
