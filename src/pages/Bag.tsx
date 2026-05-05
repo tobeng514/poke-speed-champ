@@ -23,10 +23,10 @@ const STATS: { key: StatKey; label: string }[] = [
 ];
 
 const SORT_OPTIONS = [
-  { v: "recent", l: "最近新增" },
-  { v: "name", l: "名字" },
-  { v: "species", l: "種類" },
-  { v: "nickname", l: "暱稱" },
+  { v: "no", l: "編號" },
+  { v: "type", l: "屬性" },
+  { v: "favorite", l: "我的最愛" },
+  { v: "added", l: "加入時間" },
 ] as const;
 type SortKey = typeof SORT_OPTIONS[number]["v"];
 
