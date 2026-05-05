@@ -4,7 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Eye, ImagePlus, X } from "lucide-react";
+import { Eye, ImagePlus, Trash2, X } from "lucide-react";
 
 interface Props {
   pokemonId: string;
@@ -21,7 +21,7 @@ const sizeMap = {
 };
 
 const PokemonAvatar = ({ pokemonId, size = "md", className, interactive = true }: Props) => {
-  const { images, upload } = usePokemonImages();
+  const { images, upload, remove } = usePokemonImages();
   const url = images[pokemonId];
   const [menuOpen, setMenuOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
@@ -66,6 +66,17 @@ const PokemonAvatar = ({ pokemonId, size = "md", className, interactive = true }
             className="w-full flex items-center gap-2 px-2 py-2 text-sm rounded hover:bg-secondary"
           >
             <ImagePlus className="w-4 h-4" /> 設定圖片
+          </button>
+          <button
+            disabled={!url}
+            onClick={async () => {
+              setMenuOpen(false);
+              try { await remove(pokemonId); toast({ title: "已移除頭像" }); }
+              catch (err: any) { toast({ title: "移除失敗", description: err.message, variant: "destructive" }); }
+            }}
+            className="w-full flex items-center gap-2 px-2 py-2 text-sm rounded hover:bg-secondary text-destructive disabled:opacity-50"
+          >
+            <Trash2 className="w-4 h-4" /> 移除頭像
           </button>
           <button
             onClick={() => setMenuOpen(false)}
