@@ -160,6 +160,29 @@ const TeamEditor = ({
                         );
                       })}
                     </div>
+
+                    <Field label="技能（4 個）">
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {[0, 1, 2, 3].map((mi) => {
+                          const m = (slot.moves ?? [])[mi];
+                          return (
+                            <button key={mi} type="button"
+                              onClick={() => setMovePicker({ slot: i, idx: mi })}
+                              className="h-9 text-xs rounded-md border border-input bg-background flex items-center justify-between px-2 active:scale-95">
+                              <span className={cn("truncate", !m && "text-muted-foreground")}>
+                                {m ? prettyName(m) : `技能 ${mi + 1}`}
+                              </span>
+                              {m && <X className="w-3 h-3 shrink-0 opacity-60" onClick={(e) => {
+                                e.stopPropagation();
+                                const next = [...(slot.moves ?? [])];
+                                next[mi] = "";
+                                update(i, { moves: next });
+                              }} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </Field>
                   </>
                 )}
               </CollapsibleContent>
