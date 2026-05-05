@@ -9,6 +9,7 @@ import {
   Menu, BookOpen, Share2, User as UserIcon, Bug, Send, Settings, LogOut, ChevronRight, Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT, LANGS } from "@/i18n";
 
 type View = "menu" | "account" | "settings";
 
