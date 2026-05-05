@@ -37,11 +37,19 @@ const Bag = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<PokeType[]>([]);
-  const [sortKey, setSortKey] = useState<SortKey>(() =>
-    (localStorage.getItem("bag.sort") as SortKey) || "recent");
+  const [sortKey, setSortKey] = useState<SortKey>(() => {
+    const v = localStorage.getItem("bag.sort") as SortKey | null;
+    return (v && SORT_OPTIONS.some((o) => o.v === v)) ? v : "no";
+  });
   const { toast } = useToast();
 
   useEffect(() => { localStorage.setItem("bag.sort", sortKey); }, [sortKey]);
+
+  const speciesIndex = useMemo(() => {
+    const m = new Map<string, number>();
+    POKEMON.forEach((p, i) => m.set(p.id, i));
+    return m;
+  }, []);
 
   const filtered = useMemo(() => {
     let arr = bag.filter((b) => {
@@ -55,19 +63,17 @@ const Bag = () => {
       }
       return true;
     });
-    if (sortKey === "name") {
-      arr = [...arr].sort((a, b) => {
-        const an = (a.nickname || findPokemon(a.pokemon_id)?.name || "").toLowerCase();
-        const bn = (b.nickname || findPokemon(b.pokemon_id)?.name || "").toLowerCase();
-        return an.localeCompare(bn);
-      });
-    } else if (sortKey === "species") {
-      arr = [...arr].sort((a, b) => a.pokemon_id.localeCompare(b.pokemon_id));
-    } else if (sortKey === "nickname") {
-      arr = [...arr].sort((a, b) => (a.nickname || "").localeCompare(b.nickname || ""));
+    if (sortKey === "no") {
+      arr = [...arr].sort((a, b) => (speciesIndex.get(a.pokemon_id) ?? 9999) - (speciesIndex.get(b.pokemon_id) ?? 9999));
+    } else if (sortKey === "type") {
+      arr = [...arr].sort((a, b) => (POKEMON_TYPES[a.pokemon_id]?.[0] ?? "").localeCompare(POKEMON_TYPES[b.pokemon_id]?.[0] ?? ""));
+    } else if (sortKey === "favorite") {
+      arr = [...arr].sort((a, b) => Number(b.favorite ?? false) - Number(a.favorite ?? false));
+    } else if (sortKey === "added") {
+      arr = [...arr].sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
     }
     return arr;
-  }, [bag, search, typeFilter, sortKey]);
+  }, [bag, search, typeFilter, sortKey, speciesIndex]);
 
   const handleAdd = async (id: string) => {
     try { await add(id); toast({ title: "已加入背包" }); }
