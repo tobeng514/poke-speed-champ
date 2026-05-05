@@ -15,10 +15,14 @@ import { Search, Plus, Filter, ArrowUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SORT_OPTIONS = [
-  { v: "default", l: "預設" },
-  { v: "name", l: "名字" },
+  { v: "no", l: "編號" },
+  { v: "type", l: "屬性" },
   { v: "hp", l: "HP" },
-  { v: "speed", l: "速度" },
+  { v: "atk", l: "攻擊" },
+  { v: "def", l: "防禦" },
+  { v: "spa", l: "特攻" },
+  { v: "spd", l: "特防" },
+  { v: "spe", l: "速度" },
 ] as const;
 type SortKey = typeof SORT_OPTIONS[number]["v"];
 
@@ -27,8 +31,10 @@ const Dex = () => {
   const [openId, setOpenId] = useState<string | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<PokeType[]>([]);
-  const [sortKey, setSortKey] = useState<SortKey>(() =>
-    (localStorage.getItem("dex.sort") as SortKey) || "default");
+  const [sortKey, setSortKey] = useState<SortKey>(() => {
+    const v = localStorage.getItem("dex.sort") as SortKey | null;
+    return (v && SORT_OPTIONS.some((o) => o.v === v)) ? v : "no";
+  });
 
   useEffect(() => { localStorage.setItem("dex.sort", sortKey); }, [sortKey]);
 
@@ -40,9 +46,12 @@ const Dex = () => {
         return typeFilter.some((tf) => t.includes(tf));
       });
     }
-    if (sortKey === "name") arr = [...arr].sort((a, b) => a.name.localeCompare(b.name));
-    else if (sortKey === "hp") arr = [...arr].sort((a, b) => b.baseHp - a.baseHp);
-    else if (sortKey === "speed") arr = [...arr].sort((a, b) => b.baseSpeed - a.baseSpeed);
+    if (sortKey === "type") {
+      arr = [...arr].sort((a, b) => (POKEMON_TYPES[a.id]?.[0] ?? "").localeCompare(POKEMON_TYPES[b.id]?.[0] ?? ""));
+    } else if (sortKey === "hp") arr = [...arr].sort((a, b) => b.baseHp - a.baseHp);
+    else if (sortKey === "spe") arr = [...arr].sort((a, b) => b.baseSpeed - a.baseSpeed);
+    // atk/def/spa/spd: data not in local; keep dex order (no sort)
+    // sortKey "no" = default order in POKEMON list
     return arr;
   }, [search, typeFilter, sortKey]);
 
