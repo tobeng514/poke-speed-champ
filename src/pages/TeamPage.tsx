@@ -229,18 +229,16 @@ const BagSelectDialog = ({
   onConfirm: (picked: import("@/hooks/useBag").BagPokemon[]) => void;
 }) => {
   const { bag, add } = useBag();
-  // Prefill with already-used bag ids so user can deselect to remove
-  const initialSelected = currentSlots.map((s) => s.bagId).filter(Boolean) as string[];
-  const [selected, setSelected] = useState<string[]>(initialSelected);
+  const [selected, setSelected] = useState<string[]>([]);
   const [addOpen, setAddOpen] = useState(false);
   const { toast } = useToast();
 
-  // sync when dialog reopens
-  useState(() => {});
-  // re-init selection when opening
-  if (open && selected.length === 0 && initialSelected.length > 0) {
-    // no-op: handled via key
-  }
+  // sync selection with current team's bag entries each time the dialog opens
+  useEffect(() => {
+    if (open) {
+      setSelected(currentSlots.map((s) => s.bagId).filter(Boolean) as string[]);
+    }
+  }, [open]);
 
   const toggle = (bagId: string) => {
     if (selected.includes(bagId)) setSelected(selected.filter((x) => x !== bagId));
@@ -250,9 +248,8 @@ const BagSelectDialog = ({
 
   return (
     <Dialog
-      key={open ? "open" : "closed"}
       open={open}
-      onOpenChange={(o) => { if (!o) setSelected(initialSelected); onOpenChange(o); }}
+      onOpenChange={onOpenChange}
     >
       <DialogContent className="max-w-md">
         <DialogHeader>
