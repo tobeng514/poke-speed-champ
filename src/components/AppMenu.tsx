@@ -18,6 +18,7 @@ const AppMenu = () => {
   const [view, setView] = useState<View>("menu");
   const { profile, user, signOut, refreshProfile } = useAuth();
   const { toast } = useToast();
+  const { t } = useT();
   const [idDraft, setIdDraft] = useState(profile?.id_name ?? "");
   const [savingId, setSavingId] = useState(false);
   useEffect(() => { setIdDraft(profile?.id_name ?? ""); }, [profile?.id_name]);
