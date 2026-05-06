@@ -4,10 +4,13 @@ import { findPokemon, calcHp } from "@/data/pokemon";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import PokemonAvatar from "@/components/PokemonAvatar";
+import { localizedName } from "@/lib/pokemonName";
+import { useT } from "@/i18n";
 
 const Home = () => {
   const { homeTeam, loading } = useTeams();
   const { profile } = useAuth();
+  const { lang } = useT();
 
   return (
     <div className="px-4">
@@ -56,7 +59,7 @@ const Home = () => {
                 >
                   <PokemonAvatar pokemonId={data.id} size="lg" />
                   <p className="text-sm font-semibold text-center truncate w-full mt-2">
-                    {slot.nickname || data.name}
+                    {slot.nickname || localizedName(data, lang)}
                   </p>
                   <div className="mt-2 w-full">
                     <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">

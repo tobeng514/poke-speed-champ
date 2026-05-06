@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  POKEMON, calcStat, calcHp, stageMultiplier, speedNatureMod, findPokemon,
+  POKEMON, ITEMS, calcStat, calcHp, stageMultiplier, speedNatureMod, findPokemon,
   type PokemonData,
 } from "@/data/pokemon";
 import type { TeamSlot } from "@/types/team";
 import { emptySlot } from "@/types/team";
 import { useTeams } from "@/hooks/useTeams";
+import { localizedName } from "@/lib/pokemonName";
+import { useT } from "@/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Sun, CloudRain, Wind, Snowflake, Repeat2, RotateCcw, Users, ChevronDown, Camera, Image as ImageIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -31,6 +34,7 @@ interface Row {
   slot: BattleSlot;
   data: PokemonData;
   side: Side;
+  slotIdx: number;
   realSpeed: number;
   scarfSpeed: number | null;
   weatherSpeed: number;
@@ -40,6 +44,7 @@ interface Row {
 const PokeSpeedChamp = () => {
   const { teams, battleTeam, setActiveTeam } = useTeams();
   const { toast } = useToast();
+  const { lang } = useT();
   const notImpl = (label: string) => toast({ title: `${label}（即將推出）` });
   const [ally, setAlly] = useState<BattleSlot[]>(emptyBattleTeam());
   const [enemy, setEnemy] = useState<BattleSlot[]>(emptyBattleTeam());
@@ -48,6 +53,7 @@ const PokeSpeedChamp = () => {
   const [trickRoom, setTrickRoom] = useState(false);
   const [weather, setWeather] = useState<Weather>("none");
   const [teamSheet, setTeamSheet] = useState<Side | null>(null);
+  const [quickEdit, setQuickEdit] = useState<{ side: Side; idx: number } | null>(null);
 
   // Load active battle team into ally side whenever it changes.
   useEffect(() => {
@@ -77,8 +83,9 @@ const PokeSpeedChamp = () => {
   const rows = useMemo<Row[]>(() => {
     const build = (slots: BattleSlot[], side: Side): Row[] =>
       slots
-        .filter((s) => s.id)
-        .map((s) => {
+        .map((s, slotIdx) => ({ s, slotIdx }))
+        .filter(({ s }) => s.id)
+        .map(({ s, slotIdx }) => {
           const data = findPokemon(s.id)!;
           const baseSpd = calcStat(data.baseSpeed, s.ivs.spe, s.evs.spe, speedNatureMod(s.nature ?? "Hardy"));
           const real = Math.floor(baseSpd * stageMultiplier(s.stage));
@@ -94,7 +101,7 @@ const PokeSpeedChamp = () => {
           const tw = side === "ally" ? allyTW : enemyTW;
           if (tw) wSpd = Math.floor(wSpd * 2);
           return {
-            slot: s, data, side, realSpeed: real,
+            slot: s, data, side, slotIdx, realSpeed: real,
             scarfSpeed: isScarf ? scarfVal : null,
             weatherSpeed: wSpd,
             isScarf,
@@ -197,9 +204,10 @@ const PokeSpeedChamp = () => {
           <ul className="space-y-2">
             {rows.map((r, i) => (
               <li
-                key={`${r.side}-${i}-${r.data.id}`}
+                key={`${r.side}-${r.slotIdx}-${r.data.id}`}
+                onClick={() => setQuickEdit({ side: r.side, idx: r.slotIdx })}
                 className={cn(
-                  "rounded-xl border p-3 flex items-center gap-3 active:scale-[0.99] transition-transform",
+                  "rounded-xl border p-3 flex items-center gap-3 active:scale-[0.99] transition-transform cursor-pointer",
                   r.side === "ally" ? "bg-ally-bg/50 border-ally/30" : "bg-enemy-bg/50 border-enemy/30"
                 )}
               >
@@ -209,7 +217,7 @@ const PokeSpeedChamp = () => {
                 <div className="w-12 h-12 rounded-lg bg-secondary/40 flex items-center justify-center text-xl font-bold text-muted-foreground shrink-0">?</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-semibold text-sm truncate">{r.slot.nickname || r.data.name}</span>
+                    <span className="font-semibold text-sm truncate">{r.slot.nickname || localizedName(r.data, lang)}</span>
                     {r.slot.stage !== 0 && (
                       <span className={cn("text-[10px] px-1 py-0.5 rounded font-mono", r.slot.stage > 0 ? "bg-ally/20 text-ally" : "bg-enemy/20 text-enemy")}>
                         {r.slot.stage > 0 ? `+${r.slot.stage}` : r.slot.stage}
@@ -273,6 +281,53 @@ const PokeSpeedChamp = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={quickEdit !== null} onOpenChange={(o) => !o && setQuickEdit(null)}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>
+              {quickEdit && (() => {
+                const arr = quickEdit.side === "ally" ? ally : enemy;
+                const s = arr[quickEdit.idx];
+                const d = findPokemon(s?.id);
+                return s?.nickname || (d ? localizedName(d, lang) : "");
+              })()}
+            </DialogTitle>
+          </DialogHeader>
+          {quickEdit && (() => {
+            const arr = quickEdit.side === "ally" ? ally : enemy;
+            const s = arr[quickEdit.idx];
+            if (!s) return null;
+            const change = (p: Partial<BattleSlot>) => updateSlot(quickEdit.side, quickEdit.idx, p);
+            return (
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground">速度階段</label>
+                  <div className="grid grid-cols-7 gap-1">
+                    {STAGES.map((st) => (
+                      <button key={st} onClick={() => change({ stage: st })}
+                        className={cn("h-8 rounded-md text-[11px] font-mono border",
+                          s.stage === st ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"
+                        )}>
+                        {st > 0 ? `+${st}` : st}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground">道具</label>
+                  <Select value={s.item ?? "None"} onValueChange={(v) => change({ item: v as any, scarfOverride: v === "Choice Scarf" })}>
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      {ITEMS.map((it) => <SelectItem key={it} value={it}>{it}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -305,6 +360,7 @@ const BattleSlotEditor = ({
   slot: BattleSlot; onChange: (patch: Partial<BattleSlot>) => void; accent: Side;
 }) => {
   const data = findPokemon(slot.id);
+  const { lang } = useT();
   return (
     <div className={cn(
       "rounded-xl border p-3 space-y-2",
@@ -319,7 +375,7 @@ const BattleSlotEditor = ({
         </SelectTrigger>
         <SelectContent className="max-h-72">
           {POKEMON.map((p) => (
-            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+            <SelectItem key={p.id} value={p.id}>{localizedName(p, lang)}</SelectItem>
           ))}
         </SelectContent>
       </Select>

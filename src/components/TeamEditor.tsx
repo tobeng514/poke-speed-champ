@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import type { TeamSlot } from "@/types/team";
 import { POKEMON, NATURES, ITEMS, findPokemon, calcHp, calcStat, speedNatureMod, EV_TOTAL_CAP, EV_INDIVIDUAL_CAP } from "@/data/pokemon";
 import { fetchPokemon, prettyName } from "@/lib/pokeapi";
+import { localizedName } from "@/lib/pokemonName";
+import { useT } from "@/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -30,6 +32,7 @@ const TeamEditor = ({
   const [openIdx, setOpenIdx] = useState<number | null>(0);
   const [movesByPid, setMovesByPid] = useState<Record<string, string[]>>({});
   const [movePicker, setMovePicker] = useState<{ slot: number; idx: number } | null>(null);
+  const { lang } = useT();
 
   useEffect(() => {
     const ids = Array.from(new Set(slots.map((s) => s.id).filter(Boolean) as string[]));
@@ -68,7 +71,7 @@ const TeamEditor = ({
                   {data ? "?" : <span className="text-[10px]">{i + 1}</span>}
                 </div>
                 <div className="flex-1 text-left min-w-0">
-                  <p className="font-semibold text-sm truncate">{data?.name ?? `空位 ${i + 1}`}</p>
+                  <p className="font-semibold text-sm truncate">{data ? localizedName(data, lang) : `空位 ${i + 1}`}</p>
                   {data && (
                     <p className="text-[10px] text-muted-foreground truncate">
                       {slot.nature} · {slot.item} · EV {evTotal}/{EV_TOTAL_CAP}
@@ -88,7 +91,7 @@ const TeamEditor = ({
                   </SelectTrigger>
                   <SelectContent className="max-h-72">
                     {POKEMON.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.nameZh ? `${p.nameZh} (${p.name})` : p.name}</SelectItem>
+                      <SelectItem key={p.id} value={p.id}>{localizedName(p, lang)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

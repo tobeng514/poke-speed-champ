@@ -18,6 +18,7 @@ const AppMenu = () => {
   const [view, setView] = useState<View>("menu");
   const { profile, user, signOut, refreshProfile } = useAuth();
   const { toast } = useToast();
+  const { t } = useT();
   const [idDraft, setIdDraft] = useState(profile?.id_name ?? "");
   const [savingId, setSavingId] = useState(false);
   useEffect(() => { setIdDraft(profile?.id_name ?? ""); }, [profile?.id_name]);
@@ -59,9 +60,9 @@ const AppMenu = () => {
         <SheetContent side="left" className="w-[85vw] max-w-sm p-0 flex flex-col">
           <SheetHeader className="px-4 py-4 border-b border-border">
             <SheetTitle>
-              {view === "menu" && "選單"}
-              {view === "account" && "帳號"}
-              {view === "settings" && "設定"}
+              {view === "menu" && t("menu")}
+              {view === "account" && t("account")}
+              {view === "settings" && t("settings")}
             </SheetTitle>
           </SheetHeader>
 
@@ -69,26 +70,26 @@ const AppMenu = () => {
             {view === "menu" && (
               <div className="py-2">
                 <Section>
-                  <Row icon={BookOpen} label="圖鑑" onClick={() => { close(); window.location.assign("/dex"); }} />
-                  <Row icon={Share2} label="隊伍分享" onClick={() => toast({ title: "即將推出" })} />
+                  <Row icon={BookOpen} label={t("dex")} onClick={() => { close(); window.location.assign("/dex"); }} />
+                  <Row icon={Share2} label={t("teamShare")} onClick={() => toast({ title: t("soon") })} />
                 </Section>
                 <div className="h-px bg-border my-2" />
                 <Section>
-                  <Row icon={UserIcon} label="帳號" onClick={() => setView("account")} chevron />
-                  <Row icon={Bug} label="回報或建議" onClick={() => toast({ title: "即將推出" })} />
-                  <Row icon={Send} label="分享這個 APP" onClick={share} />
-                  <Row icon={Settings} label="設定" onClick={() => setView("settings")} chevron />
-                  <Row icon={LogOut} label="登出" onClick={async () => { await signOut(); close(); }} destructive />
+                  <Row icon={UserIcon} label={t("account")} onClick={() => setView("account")} chevron />
+                  <Row icon={Bug} label={t("reportIssue")} onClick={() => toast({ title: t("soon") })} />
+                  <Row icon={Send} label={t("shareApp")} onClick={share} />
+                  <Row icon={Settings} label={t("settings")} onClick={() => setView("settings")} chevron />
+                  <Row icon={LogOut} label={t("logout")} onClick={async () => { await signOut(); close(); }} destructive />
                 </Section>
               </div>
             )}
 
             {view === "account" && (
               <div className="p-4 space-y-4">
-                <Button variant="ghost" size="sm" onClick={() => setView("menu")}>← 返回</Button>
-                <InfoBlock label="Email" value={user?.email ?? "—"} />
+                <Button variant="ghost" size="sm" onClick={() => setView("menu")}>{t("backTo")}</Button>
+                <InfoBlock label={t("email")} value={user?.email ?? "—"} />
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">ID Name</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t("idName")}</p>
                   <div className="flex gap-2">
                     <Input value={idDraft} onChange={(e) => setIdDraft(e.target.value)} className="h-9" />
                     <Button size="sm" onClick={saveIdName} disabled={savingId || idDraft.trim() === (profile?.id_name ?? "")}>
@@ -97,15 +98,15 @@ const AppMenu = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">連動帳號</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("linkedAccounts")}</p>
                   {["Google", "Facebook"].map((p) => (
                     <button
                       key={p}
-                      onClick={() => toast({ title: `${p} 連動即將推出` })}
+                      onClick={() => toast({ title: `${p} ${t("linkSoon")}` })}
                       className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border border-border bg-card hover:bg-secondary/40 text-sm"
                     >
                       <span>{p}</span>
-                      <span className="text-[11px] text-muted-foreground">未連動</span>
+                      <span className="text-[11px] text-muted-foreground">{t("notLinked")}</span>
                     </button>
                   ))}
                 </div>
@@ -114,7 +115,7 @@ const AppMenu = () => {
 
             {view === "settings" && (
               <div className="p-4 space-y-4">
-                <Button variant="ghost" size="sm" onClick={() => setView("menu")}>← 返回</Button>
+                <Button variant="ghost" size="sm" onClick={() => setView("menu")}>{t("backTo")}</Button>
                 <ThemeToggle />
                 <LanguageSelect />
               </div>

@@ -27,6 +27,7 @@ import { CSS } from "@dnd-kit/utilities";
 
 const TeamPage = () => {
   const { teams, settings, saveTeam, deleteTeam, deleteTeams, duplicateTeam, setBothActiveTeams, reorderTeams, loading } = useTeams();
+  const { lang } = useT();
   const [editing, setEditing] = useState<{ team?: Team; slots: TeamSlot[]; name: string } | null>(null);
   const [picking, setPicking] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
@@ -98,17 +99,18 @@ const TeamPage = () => {
     toast({ title: "已複製" });
   };
 
+  const { t } = useT();
   return (
     <div className="px-4">
       <header className="py-3 flex items-center justify-end gap-2">
         {batchMode ? (
           <>
-            <span className="text-sm text-muted-foreground mr-auto">已選 {batchSel.size}</span>
+            <span className="text-sm text-muted-foreground mr-auto">{t("selected") || "已選"} {batchSel.size}</span>
             <Button size="sm" variant="outline" onClick={batchDuplicate} disabled={!batchSel.size}>
-              <Copy className="w-4 h-4" /> 複製
+              <Copy className="w-4 h-4" /> {t("duplicate") || "複製"}
             </Button>
             <Button size="sm" variant="destructive" onClick={batchDelete} disabled={!batchSel.size}>
-              <Trash2 className="w-4 h-4" /> 刪除
+              <Trash2 className="w-4 h-4" /> {t("delete")}
             </Button>
             <Button size="sm" variant="ghost" onClick={exitBatch}>
               <X className="w-4 h-4" />
@@ -117,20 +119,20 @@ const TeamPage = () => {
         ) : (
           <>
             <Button size="sm" onClick={startNew}>
-              <Plus className="w-4 h-4" /> 新建
+              <Plus className="w-4 h-4" /> {t("new")}
             </Button>
             <Button size="sm" variant="outline" onClick={() => setBatchMode(true)} disabled={teams.length === 0}>
-              <CheckSquare className="w-4 h-4" /> 批量
+              <CheckSquare className="w-4 h-4" /> {t("batch") || "批量"}
             </Button>
           </>
         )}
       </header>
 
       {loading ? (
-        <div className="text-center text-sm text-muted-foreground py-20">Loading…</div>
+        <div className="text-center text-sm text-muted-foreground py-20">{t("loading")}</div>
       ) : teams.length === 0 ? (
         <div className="border border-dashed border-border rounded-2xl p-8 text-center">
-          <p className="text-sm text-muted-foreground">仲未有隊伍，撳「新建」開始組隊</p>
+          <p className="text-sm text-muted-foreground">{t("teamEmpty")}</p>
         </div>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} autoScroll={{ threshold: { x: 0, y: 0.15 } }}>
@@ -169,12 +171,19 @@ const TeamPage = () => {
                   onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                 />
                 <div className="grid grid-cols-6 gap-1.5">
-                  {editing.slots.map((s, i) => (
-                    <div key={i}
-                      className="aspect-square rounded-lg border border-dashed border-border bg-card flex items-center justify-center">
-                      {s.id ? <PokemonAvatar pokemonId={s.id} size="sm" interactive={false} /> : <Plus className="w-4 h-4 text-muted-foreground" />}
-                    </div>
-                  ))}
+                  {editing.slots.map((s, i) => {
+                    const d = findPokemon(s.id ?? "");
+                    return (
+                      <div key={i} className="flex flex-col items-center gap-0.5">
+                        <div className="aspect-square w-full rounded-lg border border-dashed border-border bg-card flex items-center justify-center">
+                          {s.id ? <PokemonAvatar pokemonId={s.id} size="sm" interactive={false} /> : <Plus className="w-4 h-4 text-muted-foreground" />}
+                        </div>
+                        <span className="text-[9px] truncate w-full text-center text-muted-foreground">
+                          {d ? localizedName(d, lang).split("-")[0] : ""}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
                 <Button variant="outline" className="w-full" onClick={() => setPicking(true)}>
                   <span className="text-lg mr-1" role="img" aria-label="bag">🎒</span> 打開背包
@@ -241,6 +250,7 @@ const SortableTeam = ({
   onDuplicate: () => void; onMoveTop: () => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: team.id });
+  const { lang } = useT();
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
   return (
     <li ref={setNodeRef} style={style} className={cn(
@@ -281,9 +291,17 @@ const SortableTeam = ({
       </div>
       <div className="flex items-center gap-2">
         <div className="grid grid-cols-6 gap-1.5 flex-1">
-          {team.slots.map((s, i) => (
-            <PokemonAvatar key={i} pokemonId={s.id ?? ""} size="sm" interactive={false} />
-          ))}
+          {team.slots.map((s, i) => {
+            const d = findPokemon(s.id ?? "");
+            return (
+              <div key={i} className="flex flex-col items-center gap-0.5 min-w-0">
+                <PokemonAvatar pokemonId={s.id ?? ""} size="sm" interactive={false} />
+                <span className="text-[9px] truncate w-full text-center text-muted-foreground">
+                  {d ? localizedName(d, lang).split("-")[0] : ""}
+                </span>
+              </div>
+            );
+          })}
         </div>
         {!batchMode && (
           <>
