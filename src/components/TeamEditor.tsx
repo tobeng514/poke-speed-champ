@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import type { TeamSlot } from "@/types/team";
 import { POKEMON, NATURES, ITEMS, findPokemon, calcHp, calcStat, speedNatureMod, EV_TOTAL_CAP, EV_INDIVIDUAL_CAP } from "@/data/pokemon";
 import { fetchPokemon, prettyName } from "@/lib/pokeapi";
+import { localizedName } from "@/lib/pokemonName";
+import { useT } from "@/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
