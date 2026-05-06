@@ -12,7 +12,7 @@ import PokemonPickerDialog from "@/components/PokemonPickerDialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Check, GripVertical, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { ArrowUpToLine, Check, CheckSquare, Copy, GripVertical, Pencil, Plus, Square, Star, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
@@ -24,9 +24,11 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 const TeamPage = () => {
-  const { teams, settings, saveTeam, deleteTeam, setBothActiveTeams, reorderTeams, loading } = useTeams();
+  const { teams, settings, saveTeam, deleteTeam, deleteTeams, duplicateTeam, setBothActiveTeams, reorderTeams, loading } = useTeams();
   const [editing, setEditing] = useState<{ team?: Team; slots: TeamSlot[]; name: string } | null>(null);
   const [picking, setPicking] = useState(false);
+  const [batchMode, setBatchMode] = useState(false);
+  const [batchSel, setBatchSel] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { delay: 200, tolerance: 5 } }));
@@ -64,12 +66,62 @@ const TeamPage = () => {
     reorderTeams(reordered);
   };
 
+  const moveToTop = (id: string) => {
+    const idx = teams.findIndex((t) => t.id === id);
+    if (idx <= 0) return;
+    const ordered = [id, ...teams.filter((t) => t.id !== id).map((t) => t.id)];
+    reorderTeams(ordered);
+  };
+
+  const toggleBatch = (id: string) => {
+    const next = new Set(batchSel);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setBatchSel(next);
+  };
+
+  const exitBatch = () => { setBatchMode(false); setBatchSel(new Set()); };
+
+  const batchDelete = async () => {
+    if (!batchSel.size) return;
+    if (!confirm(`刪除 ${batchSel.size} 個隊伍？`)) return;
+    await deleteTeams(Array.from(batchSel));
+    exitBatch();
+    toast({ title: "已刪除" });
+  };
+
+  const batchDuplicate = async () => {
+    if (!batchSel.size) return;
+    for (const id of batchSel) await duplicateTeam(id);
+    exitBatch();
+    toast({ title: "已複製" });
+  };
+
   return (
     <div className="px-4">
-      <header className="py-3 flex items-center justify-end">
-        <Button size="sm" onClick={startNew}>
-          <Plus className="w-4 h-4" /> 新建
-        </Button>
+      <header className="py-3 flex items-center justify-end gap-2">
+        {batchMode ? (
+          <>
+            <span className="text-sm text-muted-foreground mr-auto">已選 {batchSel.size}</span>
+            <Button size="sm" variant="outline" onClick={batchDuplicate} disabled={!batchSel.size}>
+              <Copy className="w-4 h-4" /> 複製
+            </Button>
+            <Button size="sm" variant="destructive" onClick={batchDelete} disabled={!batchSel.size}>
+              <Trash2 className="w-4 h-4" /> 刪除
+            </Button>
+            <Button size="sm" variant="ghost" onClick={exitBatch}>
+              <X className="w-4 h-4" />
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button size="sm" onClick={startNew}>
+              <Plus className="w-4 h-4" /> 新建
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setBatchMode(true)} disabled={teams.length === 0}>
+              <CheckSquare className="w-4 h-4" /> 批量
+            </Button>
+          </>
+        )}
       </header>
 
       {loading ? (
@@ -86,9 +138,14 @@ const TeamPage = () => {
                 <SortableTeam
                   key={t.id} team={t}
                   isActive={settings?.home_team_id === t.id}
+                  batchMode={batchMode}
+                  batchSelected={batchSel.has(t.id)}
+                  onBatchToggle={() => toggleBatch(t.id)}
                   onActivate={() => setBothActiveTeams(t.id)}
                   onEdit={() => startEdit(t)}
                   onDelete={() => deleteTeam(t.id)}
+                  onDuplicate={async () => { await duplicateTeam(t.id); toast({ title: "已複製" }); }}
+                  onMoveTop={() => moveToTop(t.id)}
                 />
               ))}
             </ul>
