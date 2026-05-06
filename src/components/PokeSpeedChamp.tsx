@@ -281,6 +281,53 @@ const PokeSpeedChamp = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={quickEdit !== null} onOpenChange={(o) => !o && setQuickEdit(null)}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>
+              {quickEdit && (() => {
+                const arr = quickEdit.side === "ally" ? ally : enemy;
+                const s = arr[quickEdit.idx];
+                const d = findPokemon(s?.id);
+                return s?.nickname || (d ? localizedName(d, lang) : "");
+              })()}
+            </DialogTitle>
+          </DialogHeader>
+          {quickEdit && (() => {
+            const arr = quickEdit.side === "ally" ? ally : enemy;
+            const s = arr[quickEdit.idx];
+            if (!s) return null;
+            const change = (p: Partial<BattleSlot>) => updateSlot(quickEdit.side, quickEdit.idx, p);
+            return (
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground">速度階段</label>
+                  <div className="grid grid-cols-7 gap-1">
+                    {STAGES.map((st) => (
+                      <button key={st} onClick={() => change({ stage: st })}
+                        className={cn("h-8 rounded-md text-[11px] font-mono border",
+                          s.stage === st ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"
+                        )}>
+                        {st > 0 ? `+${st}` : st}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground">道具</label>
+                  <Select value={s.item ?? "None"} onValueChange={(v) => change({ item: v as any, scarfOverride: v === "Choice Scarf" })}>
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      {ITEMS.map((it) => <SelectItem key={it} value={it}>{it}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
