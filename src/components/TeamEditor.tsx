@@ -32,6 +32,7 @@ const TeamEditor = ({
   const [openIdx, setOpenIdx] = useState<number | null>(0);
   const [movesByPid, setMovesByPid] = useState<Record<string, string[]>>({});
   const [movePicker, setMovePicker] = useState<{ slot: number; idx: number } | null>(null);
+  const { lang } = useT();
 
   useEffect(() => {
     const ids = Array.from(new Set(slots.map((s) => s.id).filter(Boolean) as string[]));
