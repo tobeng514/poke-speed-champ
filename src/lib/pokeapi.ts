@@ -1,5 +1,5 @@
 // Lightweight PokeAPI client + cache
-import { POKEAPI_SLUG } from "@/data/pokemonTypes";
+
 
 const memCache = new Map<string, any>();
 const moveCache = new Map<string, MoveData>();
@@ -21,7 +21,7 @@ export interface MoveData {
   pp: number | null;
 }
 
-const slug = (id: string) => POKEAPI_SLUG[id] ?? id;
+const slug = (id: string) => id;
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const fetchPokemon = async (pokemonId: string): Promise<ApiPokemon | null> => {
