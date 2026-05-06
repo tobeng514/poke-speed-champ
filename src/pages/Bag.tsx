@@ -172,13 +172,13 @@ const Bag = () => {
         <div className="flex items-center gap-2 mb-2 p-2 rounded-lg bg-secondary/50 text-xs">
           <span className="flex-1">已選 {batchSel.size}</span>
           <Button size="sm" variant="outline" onClick={() => setTagDialogOpen(true)} disabled={!batchSel.size}>
-            <Tag className="w-3 h-3 mr-1" /> 標籤
+            <Tag className="w-3 h-3" />
           </Button>
           <Button size="sm" variant="outline" onClick={async () => { await duplicateMany([...batchSel]); toast({ title: "已複製" }); exitBatch(); }} disabled={!batchSel.size}>
-            <Copy className="w-3 h-3 mr-1" /> 複製
+            <Copy className="w-3 h-3" />
           </Button>
           <Button size="sm" variant="destructive" onClick={async () => { await removeMany([...batchSel]); toast({ title: "已刪除" }); exitBatch(); }} disabled={!batchSel.size}>
-            <Trash2 className="w-3 h-3 mr-1" /> 刪除
+            <Trash2 className="w-3 h-3" />
           </Button>
         </div>
       )}
