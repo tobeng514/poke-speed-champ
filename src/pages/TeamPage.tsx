@@ -228,35 +228,54 @@ const TeamPage = () => {
   );
 };
 
-const SortableTeam = ({ team, isActive, onActivate, onEdit, onDelete }: {
+const SortableTeam = ({
+  team, isActive, batchMode, batchSelected,
+  onBatchToggle, onActivate, onEdit, onDelete, onDuplicate, onMoveTop,
+}: {
   team: Team; isActive: boolean;
+  batchMode: boolean; batchSelected: boolean;
+  onBatchToggle: () => void;
   onActivate: () => void; onEdit: () => void; onDelete: () => void;
+  onDuplicate: () => void; onMoveTop: () => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: team.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
   return (
     <li ref={setNodeRef} style={style} className={cn(
       "rounded-2xl border p-3 touch-manipulation",
-      isActive ? "border-primary bg-primary/5" : "border-border bg-card"
-    )}>
+      batchSelected ? "border-primary ring-2 ring-primary bg-primary/5"
+        : isActive ? "border-primary bg-primary/5" : "border-border bg-card"
+    )}
+      onClick={batchMode ? onBatchToggle : undefined}
+    >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2 min-w-0">
-          {isActive && <Star className="w-4 h-4 text-primary fill-primary shrink-0" />}
+          {batchMode && (
+            batchSelected
+              ? <CheckSquare className="w-4 h-4 text-primary shrink-0" />
+              : <Square className="w-4 h-4 text-muted-foreground shrink-0" />
+          )}
+          {!batchMode && isActive && <Star className="w-4 h-4 text-primary fill-primary shrink-0" />}
           <h3 className="font-semibold truncate">{team.name}</h3>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
-          {!isActive && (
-            <Button size="sm" variant="outline" onClick={onActivate}>
-              <Check className="w-3.5 h-3.5" /> 設為當前
+        {!batchMode && (
+          <div className="flex items-center gap-1 shrink-0">
+            {!isActive && (
+              <Button size="sm" variant="outline" onClick={onActivate}>
+                <Check className="w-3.5 h-3.5" /> 設為當前
+              </Button>
+            )}
+            <Button size="icon" variant="ghost" onClick={onDuplicate} aria-label="複製隊伍">
+              <Copy className="w-4 h-4" />
             </Button>
-          )}
-          <Button size="icon" variant="ghost" onClick={onEdit}>
-            <Pencil className="w-4 h-4" />
-          </Button>
-          <Button size="icon" variant="ghost" onClick={onDelete}>
-            <Trash2 className="w-4 h-4 text-destructive" />
-          </Button>
-        </div>
+            <Button size="icon" variant="ghost" onClick={onEdit}>
+              <Pencil className="w-4 h-4" />
+            </Button>
+            <Button size="icon" variant="ghost" onClick={onDelete}>
+              <Trash2 className="w-4 h-4 text-destructive" />
+            </Button>
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <div className="grid grid-cols-6 gap-1.5 flex-1">
@@ -264,14 +283,25 @@ const SortableTeam = ({ team, isActive, onActivate, onEdit, onDelete }: {
             <PokemonAvatar key={i} pokemonId={s.id ?? ""} size="sm" interactive={false} />
           ))}
         </div>
-        <button
-          {...attributes}
-          {...listeners}
-          aria-label="拖動排序"
-          className="p-1.5 rounded-md text-muted-foreground hover:bg-secondary touch-none cursor-grab active:cursor-grabbing"
-        >
-          <GripVertical className="w-5 h-5" />
-        </button>
+        {!batchMode && (
+          <>
+            <button
+              onClick={onMoveTop}
+              aria-label="移到最上"
+              className="p-1.5 rounded-md text-muted-foreground hover:bg-secondary"
+            >
+              <ArrowUpToLine className="w-5 h-5" />
+            </button>
+            <button
+              {...attributes}
+              {...listeners}
+              aria-label="拖動排序"
+              className="p-1.5 rounded-md text-muted-foreground hover:bg-secondary touch-none cursor-grab active:cursor-grabbing"
+            >
+              <GripVertical className="w-5 h-5" />
+            </button>
+          </>
+        )}
       </div>
     </li>
   );
