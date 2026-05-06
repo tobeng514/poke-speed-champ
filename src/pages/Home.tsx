@@ -59,7 +59,7 @@ const Home = () => {
                 >
                   <PokemonAvatar pokemonId={data.id} size="lg" />
                   <p className="text-sm font-semibold text-center truncate w-full mt-2">
-                    {slot.nickname || data.name}
+                    {slot.nickname || localizedName(data, lang)}
                   </p>
                   <div className="mt-2 w-full">
                     <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
