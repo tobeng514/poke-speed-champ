@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTeams } from "@/hooks/useTeams";
 import { useBag } from "@/hooks/useBag";
 import type { TeamSlot, Team } from "@/types/team";
