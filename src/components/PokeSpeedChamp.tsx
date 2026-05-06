@@ -204,9 +204,10 @@ const PokeSpeedChamp = () => {
           <ul className="space-y-2">
             {rows.map((r, i) => (
               <li
-                key={`${r.side}-${i}-${r.data.id}`}
+                key={`${r.side}-${r.slotIdx}-${r.data.id}`}
+                onClick={() => setQuickEdit({ side: r.side, idx: r.slotIdx })}
                 className={cn(
-                  "rounded-xl border p-3 flex items-center gap-3 active:scale-[0.99] transition-transform",
+                  "rounded-xl border p-3 flex items-center gap-3 active:scale-[0.99] transition-transform cursor-pointer",
                   r.side === "ally" ? "bg-ally-bg/50 border-ally/30" : "bg-enemy-bg/50 border-enemy/30"
                 )}
               >
@@ -216,7 +217,7 @@ const PokeSpeedChamp = () => {
                 <div className="w-12 h-12 rounded-lg bg-secondary/40 flex items-center justify-center text-xl font-bold text-muted-foreground shrink-0">?</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-semibold text-sm truncate">{r.slot.nickname || r.data.name}</span>
+                    <span className="font-semibold text-sm truncate">{r.slot.nickname || localizedName(r.data, lang)}</span>
                     {r.slot.stage !== 0 && (
                       <span className={cn("text-[10px] px-1 py-0.5 rounded font-mono", r.slot.stage > 0 ? "bg-ally/20 text-ally" : "bg-enemy/20 text-enemy")}>
                         {r.slot.stage > 0 ? `+${r.slot.stage}` : r.slot.stage}
