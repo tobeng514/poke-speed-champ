@@ -115,7 +115,7 @@ const AppMenu = () => {
 
             {view === "settings" && (
               <div className="p-4 space-y-4">
-                <Button variant="ghost" size="sm" onClick={() => setView("menu")}>← 返回</Button>
+                <Button variant="ghost" size="sm" onClick={() => setView("menu")}>{t("backTo")}</Button>
                 <ThemeToggle />
                 <LanguageSelect />
               </div>
