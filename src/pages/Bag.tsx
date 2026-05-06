@@ -551,14 +551,9 @@ const BagEditor = ({
           <Button variant="outline" size="icon" onClick={async () => { await onDelete(draft.id); onClose(); }}>
             <Trash2 className="w-4 h-4 text-destructive" />
           </Button>
-          <button
-            onClick={() => setDraft({ ...draft, favorite: !draft.favorite })}
-            className="text-xl leading-none px-2"
-            aria-label="favorite"
-            title="我的最愛"
-          >
-            {draft.favorite ? "⭐" : "☆"}
-          </button>
+          <Button variant="outline" size="sm" onClick={() => setTagPickerOpen(true)}>
+            <Tag className="w-4 h-4 mr-1" />標籤
+          </Button>
           <Button variant="outline" className="flex-1" onClick={onClose}>取消</Button>
           <Button className="flex-1" onClick={handleSave}>儲存</Button>
         </div>
