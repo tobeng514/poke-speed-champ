@@ -99,17 +99,18 @@ const TeamPage = () => {
     toast({ title: "已複製" });
   };
 
+  const { t } = useT();
   return (
     <div className="px-4">
       <header className="py-3 flex items-center justify-end gap-2">
         {batchMode ? (
           <>
-            <span className="text-sm text-muted-foreground mr-auto">已選 {batchSel.size}</span>
+            <span className="text-sm text-muted-foreground mr-auto">{t("selected") || "已選"} {batchSel.size}</span>
             <Button size="sm" variant="outline" onClick={batchDuplicate} disabled={!batchSel.size}>
-              <Copy className="w-4 h-4" /> 複製
+              <Copy className="w-4 h-4" /> {t("duplicate") || "複製"}
             </Button>
             <Button size="sm" variant="destructive" onClick={batchDelete} disabled={!batchSel.size}>
-              <Trash2 className="w-4 h-4" /> 刪除
+              <Trash2 className="w-4 h-4" /> {t("delete")}
             </Button>
             <Button size="sm" variant="ghost" onClick={exitBatch}>
               <X className="w-4 h-4" />
@@ -118,20 +119,20 @@ const TeamPage = () => {
         ) : (
           <>
             <Button size="sm" onClick={startNew}>
-              <Plus className="w-4 h-4" /> 新建
+              <Plus className="w-4 h-4" /> {t("new")}
             </Button>
             <Button size="sm" variant="outline" onClick={() => setBatchMode(true)} disabled={teams.length === 0}>
-              <CheckSquare className="w-4 h-4" /> 批量
+              <CheckSquare className="w-4 h-4" /> {t("batch") || "批量"}
             </Button>
           </>
         )}
       </header>
 
       {loading ? (
-        <div className="text-center text-sm text-muted-foreground py-20">Loading…</div>
+        <div className="text-center text-sm text-muted-foreground py-20">{t("loading")}</div>
       ) : teams.length === 0 ? (
         <div className="border border-dashed border-border rounded-2xl p-8 text-center">
-          <p className="text-sm text-muted-foreground">仲未有隊伍，撳「新建」開始組隊</p>
+          <p className="text-sm text-muted-foreground">{t("teamEmpty")}</p>
         </div>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} autoScroll={{ threshold: { x: 0, y: 0.15 } }}>
