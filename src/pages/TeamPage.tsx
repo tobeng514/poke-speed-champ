@@ -178,7 +178,7 @@ const TeamPage = () => {
                           {s.id ? <PokemonAvatar pokemonId={s.id} size="sm" interactive={false} /> : <Plus className="w-4 h-4 text-muted-foreground" />}
                         </div>
                         <span className="text-[9px] truncate w-full text-center text-muted-foreground">
-                          {d ? localizedName(d, "zh-TW").split("-")[0] : ""}
+                          {d ? localizedName(d, lang).split("-")[0] : ""}
                         </span>
                       </div>
                     );
