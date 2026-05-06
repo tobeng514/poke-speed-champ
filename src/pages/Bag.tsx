@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Filter, Search, Trash2, X, ArrowUpDown } from "lucide-react";
+import { Plus, Filter, Search, Trash2, X, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -41,9 +41,11 @@ const Bag = () => {
     const v = localStorage.getItem("bag.sort") as SortKey | null;
     return (v && SORT_OPTIONS.some((o) => o.v === v)) ? v : "no";
   });
+  const [sortAsc, setSortAsc] = useState<boolean>(() => localStorage.getItem("bag.sortAsc") !== "0");
   const { toast } = useToast();
 
   useEffect(() => { localStorage.setItem("bag.sort", sortKey); }, [sortKey]);
+  useEffect(() => { localStorage.setItem("bag.sortAsc", sortAsc ? "1" : "0"); }, [sortAsc]);
 
   const speciesIndex = useMemo(() => {
     const m = new Map<string, number>();
@@ -72,8 +74,9 @@ const Bag = () => {
     } else if (sortKey === "added") {
       arr = [...arr].sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
     }
+    if (!sortAsc) arr = [...arr].reverse();
     return arr;
-  }, [bag, search, typeFilter, sortKey, speciesIndex]);
+  }, [bag, search, typeFilter, sortKey, sortAsc, speciesIndex]);
 
   const handleAdd = async (id: string) => {
     try { await add(id); toast({ title: "已加入背包" }); }
@@ -87,6 +90,9 @@ const Bag = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="搜索名字…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
+        <Button variant="outline" size="icon" onClick={() => setSortAsc(!sortAsc)} title={sortAsc ? "正序" : "倒序"}>
+          {sortAsc ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+        </Button>
         <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
           <SelectTrigger className="w-auto h-10 px-2 gap-1">
             <ArrowUpDown className="w-4 h-4" />
