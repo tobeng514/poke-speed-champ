@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { POKEMON, findPokemon, NATURES, ITEMS } from "@/data/pokemon";
 import { POKEMON_TYPES } from "@/data/pokemonTypes";
 import { TYPES, TYPE_COLORS, TYPE_ZH, weaknessOf, type PokeType } from "@/data/types";
-import { fetchPokemon, type ApiPokemon } from "@/lib/pokeapi";
+import { fetchPokemon, type ApiPokemon, prettyName } from "@/lib/pokeapi";
+import { fetchMovesForType, fetchLearnersOfMove } from "@/lib/moves";
+import { localizedName } from "@/lib/pokemonName";
+import { useT } from "@/i18n";
 import { useBag } from "@/hooks/useBag";
 import PokemonAvatar from "@/components/PokemonAvatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -31,6 +34,9 @@ const Dex = () => {
   const [openId, setOpenId] = useState<string | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<PokeType[]>([]);
+  const [moveFilter, setMoveFilter] = useState<string | null>(null);
+  const [moveLearners, setMoveLearners] = useState<Set<string> | null>(null);
+  const { lang } = useT();
   const [sortKey, setSortKey] = useState<SortKey>(() => {
     const v = localStorage.getItem("dex.sort") as SortKey | null;
     return (v && SORT_OPTIONS.some((o) => o.v === v)) ? v : "no";
@@ -39,22 +45,37 @@ const Dex = () => {
 
   useEffect(() => { localStorage.setItem("dex.sort", sortKey); }, [sortKey]);
   useEffect(() => { localStorage.setItem("dex.sortAsc", sortAsc ? "1" : "0"); }, [sortAsc]);
+  useEffect(() => {
+    if (!moveFilter) { setMoveLearners(null); return; }
+    fetchLearnersOfMove(moveFilter).then((arr) => setMoveLearners(new Set(arr)));
+  }, [moveFilter]);
 
   const list = useMemo(() => {
-    let arr = POKEMON.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
+    const ql = search.toLowerCase();
+    let arr = POKEMON.filter((p) =>
+      p.name.toLowerCase().includes(ql)
+      || (p.nameZh ?? "").toLowerCase().includes(ql)
+      || (p.nameJp ?? "").toLowerCase().includes(ql),
+    );
     if (typeFilter.length > 0) {
       arr = arr.filter((p) => {
         const t = POKEMON_TYPES[p.id] ?? [];
         return typeFilter.some((tf) => t.includes(tf));
       });
     }
+    if (moveLearners) arr = arr.filter((p) => moveLearners.has(p.id));
     if (sortKey === "type") {
       arr = [...arr].sort((a, b) => (POKEMON_TYPES[a.id]?.[0] ?? "").localeCompare(POKEMON_TYPES[b.id]?.[0] ?? ""));
     } else if (sortKey === "hp") arr = [...arr].sort((a, b) => b.baseHp - a.baseHp);
+    else if (sortKey === "atk") arr = [...arr].sort((a, b) => b.baseAtk - a.baseAtk);
+    else if (sortKey === "def") arr = [...arr].sort((a, b) => b.baseDef - a.baseDef);
+    else if (sortKey === "spa") arr = [...arr].sort((a, b) => b.baseSpa - a.baseSpa);
+    else if (sortKey === "spd") arr = [...arr].sort((a, b) => b.baseSpd - a.baseSpd);
     else if (sortKey === "spe") arr = [...arr].sort((a, b) => b.baseSpeed - a.baseSpeed);
     if (!sortAsc) arr = [...arr].reverse();
     return arr;
-  }, [search, typeFilter, sortKey, sortAsc]);
+  }, [search, typeFilter, moveLearners, sortKey, sortAsc]);
+
 
   return (
     <div className="px-4 pb-4">
