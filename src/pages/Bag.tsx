@@ -511,15 +511,13 @@ const BagEditor = ({
 
           <Field label="標籤">
             <div className="flex flex-wrap gap-1">
+              {draftTags.length === 0 && <span className="text-[10px] text-muted-foreground">未貼標籤</span>}
               {draftTags.map((t) => (
                 <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-primary text-primary-foreground flex items-center gap-1">
                   #{t}
                   <button onClick={() => toggleTag(t)}><X className="w-3 h-3" /></button>
                 </span>
               ))}
-              <button onClick={() => setTagPickerOpen(true)} className="text-[10px] px-2 py-0.5 rounded-full border border-dashed">
-                + 新增
-              </button>
             </div>
           </Field>
 
@@ -551,14 +549,9 @@ const BagEditor = ({
           <Button variant="outline" size="icon" onClick={async () => { await onDelete(draft.id); onClose(); }}>
             <Trash2 className="w-4 h-4 text-destructive" />
           </Button>
-          <button
-            onClick={() => setDraft({ ...draft, favorite: !draft.favorite })}
-            className="text-xl leading-none px-2"
-            aria-label="favorite"
-            title="我的最愛"
-          >
-            {draft.favorite ? "⭐" : "☆"}
-          </button>
+          <Button variant="outline" size="sm" onClick={() => setTagPickerOpen(true)}>
+            <Tag className="w-4 h-4 mr-1" />標籤
+          </Button>
           <Button variant="outline" className="flex-1" onClick={onClose}>取消</Button>
           <Button className="flex-1" onClick={handleSave}>儲存</Button>
         </div>

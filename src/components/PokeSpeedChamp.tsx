@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 import { cn } from "@/lib/utils";
 import { Sun, CloudRain, Wind, Snowflake, Repeat2, RotateCcw, Users, ChevronDown, Camera, Image as ImageIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -240,8 +240,8 @@ const PokeSpeedChamp = () => {
         )}
       </main>
 
-      <nav className="fixed bottom-[calc(env(safe-area-inset-bottom)+72px)] inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border">
-        <div className="px-3 py-2.5 space-y-2 max-w-md mx-auto">
+      <nav className="fixed bottom-[calc(env(safe-area-inset-bottom)+52px)] inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border">
+        <div className="px-3 py-2 space-y-1.5 max-w-md mx-auto">
           <div className="grid grid-cols-4 gap-1.5">
             <WeatherBtn active={weather === "sun"} onClick={() => toggleWeather("sun")} variant="sun" icon={<Sun className="w-4 h-4" />} label="Sun" />
             <WeatherBtn active={weather === "rain"} onClick={() => toggleWeather("rain")} variant="rain" icon={<CloudRain className="w-4 h-4" />} label="Rain" />
@@ -282,25 +282,25 @@ const PokeSpeedChamp = () => {
         </SheetContent>
       </Sheet>
 
-      <Dialog open={quickEdit !== null} onOpenChange={(o) => !o && setQuickEdit(null)}>
-        <DialogContent className="max-w-xs">
-          <DialogHeader>
-            <DialogTitle>
+      <Sheet open={quickEdit !== null} onOpenChange={(o) => !o && setQuickEdit(null)}>
+        <SheetContent side="bottom" className="p-0 flex flex-col max-h-[80vh]">
+          <SheetHeader className="px-4 py-3 border-b border-border">
+            <SheetTitle>
               {quickEdit && (() => {
                 const arr = quickEdit.side === "ally" ? ally : enemy;
                 const s = arr[quickEdit.idx];
                 const d = findPokemon(s?.id);
                 return s?.nickname || (d ? localizedName(d, lang) : "");
               })()}
-            </DialogTitle>
-          </DialogHeader>
+            </SheetTitle>
+          </SheetHeader>
           {quickEdit && (() => {
             const arr = quickEdit.side === "ally" ? ally : enemy;
             const s = arr[quickEdit.idx];
             if (!s) return null;
             const change = (p: Partial<BattleSlot>) => updateSlot(quickEdit.side, quickEdit.idx, p);
             return (
-              <div className="space-y-3">
+              <div className="p-4 space-y-3 overflow-y-auto">
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase tracking-wider text-muted-foreground">速度階段</label>
                   <div className="grid grid-cols-7 gap-1">
@@ -326,8 +326,8 @@ const PokeSpeedChamp = () => {
               </div>
             );
           })()}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
