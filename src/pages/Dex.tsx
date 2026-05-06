@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { POKEMON, findPokemon, NATURES, ITEMS } from "@/data/pokemon";
 import { POKEMON_TYPES } from "@/data/pokemonTypes";
 import { TYPES, TYPE_COLORS, TYPE_ZH, weaknessOf, type PokeType } from "@/data/types";
-import { fetchPokemon, type ApiPokemon } from "@/lib/pokeapi";
+import { fetchPokemon, type ApiPokemon, prettyName } from "@/lib/pokeapi";
+import { fetchMovesForType, fetchLearnersOfMove } from "@/lib/moves";
+import { localizedName } from "@/lib/pokemonName";
+import { useT } from "@/i18n";
 import { useBag } from "@/hooks/useBag";
 import PokemonAvatar from "@/components/PokemonAvatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -31,6 +34,9 @@ const Dex = () => {
   const [openId, setOpenId] = useState<string | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<PokeType[]>([]);
+  const [moveFilter, setMoveFilter] = useState<string | null>(null);
+  const [moveLearners, setMoveLearners] = useState<Set<string> | null>(null);
+  const { lang } = useT();
   const [sortKey, setSortKey] = useState<SortKey>(() => {
     const v = localStorage.getItem("dex.sort") as SortKey | null;
     return (v && SORT_OPTIONS.some((o) => o.v === v)) ? v : "no";
@@ -39,22 +45,37 @@ const Dex = () => {
 
   useEffect(() => { localStorage.setItem("dex.sort", sortKey); }, [sortKey]);
   useEffect(() => { localStorage.setItem("dex.sortAsc", sortAsc ? "1" : "0"); }, [sortAsc]);
+  useEffect(() => {
+    if (!moveFilter) { setMoveLearners(null); return; }
+    fetchLearnersOfMove(moveFilter).then((arr) => setMoveLearners(new Set(arr)));
+  }, [moveFilter]);
 
   const list = useMemo(() => {
-    let arr = POKEMON.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
+    const ql = search.toLowerCase();
+    let arr = POKEMON.filter((p) =>
+      p.name.toLowerCase().includes(ql)
+      || (p.nameZh ?? "").toLowerCase().includes(ql)
+      || (p.nameJp ?? "").toLowerCase().includes(ql),
+    );
     if (typeFilter.length > 0) {
       arr = arr.filter((p) => {
         const t = POKEMON_TYPES[p.id] ?? [];
         return typeFilter.some((tf) => t.includes(tf));
       });
     }
+    if (moveLearners) arr = arr.filter((p) => moveLearners.has(p.id));
     if (sortKey === "type") {
       arr = [...arr].sort((a, b) => (POKEMON_TYPES[a.id]?.[0] ?? "").localeCompare(POKEMON_TYPES[b.id]?.[0] ?? ""));
     } else if (sortKey === "hp") arr = [...arr].sort((a, b) => b.baseHp - a.baseHp);
+    else if (sortKey === "atk") arr = [...arr].sort((a, b) => b.baseAtk - a.baseAtk);
+    else if (sortKey === "def") arr = [...arr].sort((a, b) => b.baseDef - a.baseDef);
+    else if (sortKey === "spa") arr = [...arr].sort((a, b) => b.baseSpa - a.baseSpa);
+    else if (sortKey === "spd") arr = [...arr].sort((a, b) => b.baseSpd - a.baseSpd);
     else if (sortKey === "spe") arr = [...arr].sort((a, b) => b.baseSpeed - a.baseSpeed);
     if (!sortAsc) arr = [...arr].reverse();
     return arr;
-  }, [search, typeFilter, sortKey, sortAsc]);
+  }, [search, typeFilter, moveLearners, sortKey, sortAsc]);
+
 
   return (
     <div className="px-4 pb-4">
@@ -74,11 +95,16 @@ const Dex = () => {
             {SORT_OPTIONS.map((o) => <SelectItem key={o.v} value={o.v}>{o.l}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Button variant="outline" size="icon" onClick={() => setFilterOpen(true)}>
+        <Button variant="outline" size="icon" onClick={() => setFilterOpen(true)} className="relative">
           <Filter className="w-4 h-4" />
+          {(typeFilter.length + (moveFilter ? 1 : 0)) > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] flex items-center justify-center">
+              {typeFilter.length + (moveFilter ? 1 : 0)}
+            </span>
+          )}
         </Button>
       </div>
-      {typeFilter.length > 0 && (
+      {(typeFilter.length > 0 || moveFilter) && (
         <div className="flex flex-wrap gap-1 mb-2">
           {typeFilter.map((t) => (
             <button key={t} onClick={() => setTypeFilter(typeFilter.filter((x) => x !== t))}
@@ -87,6 +113,11 @@ const Dex = () => {
               {TYPE_ZH[t]} <X className="w-3 h-3" />
             </button>
           ))}
+          {moveFilter && (
+            <button onClick={() => setMoveFilter(null)} className="text-[10px] px-2 py-0.5 rounded-full bg-secondary flex items-center gap-1">
+              {prettyName(moveFilter)} <X className="w-3 h-3" />
+            </button>
+          )}
         </div>
       )}
       <div className="grid grid-cols-5 gap-2">
@@ -94,47 +125,95 @@ const Dex = () => {
           <button key={p.id} onClick={() => setOpenId(p.id)}
             className="flex flex-col items-center gap-1 p-1.5 rounded-xl border border-border bg-card hover:bg-secondary/40 active:scale-95 transition">
             <PokemonAvatar pokemonId={p.id} size="sm" interactive={false} />
-            <span className="text-[10px] truncate w-full text-center">{p.name.split("-")[0]}</span>
+            <span className="text-[10px] truncate w-full text-center">{localizedName(p, lang).split("-")[0]}</span>
           </button>
         ))}
       </div>
       <DexDetail pokemonId={openId} onClose={() => setOpenId(null)} />
       <DexFilterDialog open={filterOpen} onOpenChange={setFilterOpen}
-        types={typeFilter} onTypesChange={setTypeFilter} />
+        types={typeFilter} onTypesChange={setTypeFilter}
+        move={moveFilter} onMoveChange={setMoveFilter} />
     </div>
   );
 };
 
 const DexFilterDialog = ({
-  open, onOpenChange, types, onTypesChange,
+  open, onOpenChange, types, onTypesChange, move, onMoveChange,
 }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   types: PokeType[]; onTypesChange: (v: PokeType[]) => void;
+  move: string | null; onMoveChange: (m: string | null) => void;
 }) => {
-  const [local, setLocal] = useState<PokeType[]>(types);
-  useEffect(() => { if (open) setLocal(types); }, [open]);
+  const [tab, setTab] = useState<"type" | "move">("type");
+  const [localTypes, setLocalTypes] = useState<PokeType[]>(types);
+  const [localMove, setLocalMove] = useState<string | null>(move);
+  const [moveTypeSel, setMoveTypeSel] = useState<PokeType | null>(null);
+  const [moves, setMoves] = useState<string[]>([]);
+  const [moveQ, setMoveQ] = useState("");
+
+  useEffect(() => { if (open) { setLocalTypes(types); setLocalMove(move); } }, [open]);
+  useEffect(() => {
+    if (moveTypeSel) fetchMovesForType(moveTypeSel).then(setMoves);
+    else setMoves([]);
+  }, [moveTypeSel]);
+
   const toggle = (t: PokeType) =>
-    setLocal(local.includes(t) ? local.filter((x) => x !== t) : [...local, t]);
+    setLocalTypes(localTypes.includes(t) ? localTypes.filter((x) => x !== t) : [...localTypes, t]);
+  const filteredMoves = moves.filter((m) => m.includes(moveQ.toLowerCase()));
+
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onTypesChange([]); onOpenChange(o); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { onTypesChange([]); onMoveChange(null); } onOpenChange(o); }}>
       <DialogContent className="max-w-md">
         <DialogHeader><DialogTitle>篩選</DialogTitle></DialogHeader>
-        <div>
-          <p className="text-xs font-semibold mb-2">屬性（多選 = 包含任一）</p>
-          <div className="grid grid-cols-3 gap-1.5">
-            {TYPES.map((t) => (
-              <button key={t} onClick={() => toggle(t)}
-                className={cn("text-[11px] px-2 py-1.5 rounded-md border transition",
-                  local.includes(t) ? "ring-2 ring-primary" : "opacity-60")}
-                style={{ backgroundColor: TYPE_COLORS[t], color: "white", borderColor: TYPE_COLORS[t] }}>
-                {TYPE_ZH[t]}
-              </button>
-            ))}
-          </div>
+        <div className="flex gap-1.5">
+          <Button size="sm" variant={tab === "type" ? "default" : "outline"} className="flex-1" onClick={() => setTab("type")}>屬性</Button>
+          <Button size="sm" variant={tab === "move" ? "default" : "outline"} className="flex-1" onClick={() => setTab("move")}>技能</Button>
         </div>
+        {tab === "type" && (
+          <div>
+            <p className="text-[10px] text-muted-foreground mb-2">多選 = 包含任一</p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {TYPES.map((t) => (
+                <button key={t} onClick={() => toggle(t)}
+                  className={cn("text-[11px] px-2 py-1.5 rounded-md border transition",
+                    localTypes.includes(t) ? "ring-2 ring-primary" : "opacity-60")}
+                  style={{ backgroundColor: TYPE_COLORS[t], color: "white", borderColor: TYPE_COLORS[t] }}>
+                  {TYPE_ZH[t]}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {tab === "move" && (
+          <div className="space-y-2">
+            <Input placeholder="搜索技能…" value={moveQ} onChange={(e) => setMoveQ(e.target.value)} />
+            <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1">
+              {TYPES.map((t) => (
+                <button key={t} onClick={() => setMoveTypeSel(moveTypeSel === t ? null : t)}
+                  className={cn("text-[10px] px-2 py-1 rounded-md shrink-0 border transition",
+                    moveTypeSel === t ? "ring-2 ring-primary" : "opacity-60")}
+                  style={{ backgroundColor: TYPE_COLORS[t], color: "white", borderColor: TYPE_COLORS[t] }}>
+                  {TYPE_ZH[t]}
+                </button>
+              ))}
+            </div>
+            <div className="max-h-56 overflow-y-auto space-y-0.5">
+              {!moveTypeSel && <p className="text-xs text-muted-foreground text-center py-4">先選一個屬性</p>}
+              {moveTypeSel && filteredMoves.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">無資料</p>}
+              {filteredMoves.slice(0, 200).map((m) => (
+                <button key={m} onClick={() => setLocalMove(m)}
+                  className={cn("w-full text-left text-xs px-2 py-1.5 rounded hover:bg-secondary",
+                    localMove === m && "bg-primary text-primary-foreground")}>
+                  {prettyName(m)}
+                </button>
+              ))}
+            </div>
+            {localMove && <p className="text-[10px]">已選技能：<b>{prettyName(localMove)}</b> <button onClick={() => setLocalMove(null)} className="text-destructive ml-1">清除</button></p>}
+          </div>
+        )}
         <div className="flex gap-2 pt-2">
-          <Button variant="outline" className="flex-1" onClick={() => { onTypesChange([]); onOpenChange(false); }}>清除</Button>
-          <Button className="flex-1" onClick={() => { onTypesChange(local); onOpenChange(false); }}>套用</Button>
+          <Button variant="outline" className="flex-1" onClick={() => { onTypesChange([]); onMoveChange(null); onOpenChange(false); }}>清除</Button>
+          <Button className="flex-1" onClick={() => { onTypesChange(localTypes); onMoveChange(localMove); onOpenChange(false); }}>套用</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -146,6 +225,7 @@ const DexDetail = ({ pokemonId, onClose }: { pokemonId: string | null; onClose: 
   const [api, setApi] = useState<ApiPokemon | null>(null);
   const { add } = useBag();
   const { toast } = useToast();
+  const { lang } = useT();
 
   useEffect(() => {
     setApi(null);
@@ -180,7 +260,7 @@ const DexDetail = ({ pokemonId, onClose }: { pokemonId: string | null; onClose: 
     <Sheet open={!!pokemonId} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="bottom" className="h-[92vh] p-0 flex flex-col">
         <SheetHeader className="px-4 py-3 border-b border-border">
-          <SheetTitle>{data.name}</SheetTitle>
+          <SheetTitle>{localizedName(data, lang)}</SheetTitle>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <div className="flex items-center gap-3">
@@ -275,15 +355,18 @@ const TypePills = ({ types }: { types: PokeType[] }) => (
     ))}
   </div>
 );
-const MatchupList = ({ items }: { items: typeof POKEMON }) => (
-  <div className="grid grid-cols-5 gap-1.5">
-    {items.map((p) => (
-      <div key={p.id} className="flex flex-col items-center gap-0.5">
-        <PokemonAvatar pokemonId={p.id} size="sm" interactive={false} />
-        <span className="text-[9px] truncate w-full text-center">{p.name.split("-")[0]}</span>
-      </div>
-    ))}
-  </div>
-);
+const MatchupList = ({ items }: { items: typeof POKEMON }) => {
+  const { lang } = useT();
+  return (
+    <div className="grid grid-cols-5 gap-1.5">
+      {items.map((p) => (
+        <div key={p.id} className="flex flex-col items-center gap-0.5">
+          <PokemonAvatar pokemonId={p.id} size="sm" interactive={false} />
+          <span className="text-[9px] truncate w-full text-center">{localizedName(p, lang).split("-")[0]}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default Dex;

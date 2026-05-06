@@ -4,6 +4,8 @@ import { useBag } from "@/hooks/useBag";
 import type { TeamSlot, Team } from "@/types/team";
 import { emptyTeam, emptySlot } from "@/types/team";
 import { findPokemon } from "@/data/pokemon";
+import { localizedName } from "@/lib/pokemonName";
+import { useT } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import TeamEditor from "@/components/TeamEditor";
@@ -316,6 +318,7 @@ const BagSelectDialog = ({
   onConfirm: (picked: import("@/hooks/useBag").BagPokemon[]) => void;
 }) => {
   const { bag, add } = useBag();
+  const { lang } = useT();
   const [selected, setSelected] = useState<string[]>([]);
   const [addOpen, setAddOpen] = useState(false);
   const { toast } = useToast();
@@ -362,7 +365,7 @@ const BagSelectDialog = ({
                   )}>
                   <PokemonAvatar pokemonId={b.pokemon_id} size="sm" interactive={false} />
                   <span className="text-[10px] truncate w-full text-center">
-                    {b.nickname || data?.name.split("-")[0]}
+                    {b.nickname || localizedName(data, lang).split("-")[0]}
                   </span>
                 </button>
               );
