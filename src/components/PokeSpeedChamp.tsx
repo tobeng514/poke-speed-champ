@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  POKEMON, calcStat, calcHp, stageMultiplier, speedNatureMod, findPokemon,
+  POKEMON, ITEMS, calcStat, calcHp, stageMultiplier, speedNatureMod, findPokemon,
   type PokemonData,
 } from "@/data/pokemon";
 import type { TeamSlot } from "@/types/team";
