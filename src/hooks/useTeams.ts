@@ -77,8 +77,21 @@ export const useTeams = () => {
     setSettings((cur) => (cur ? { ...cur, home_team_id: teamId, battle_team_id: teamId } : cur));
   };
 
+  const reorderTeams = async (orderedIds: string[]) => {
+    // optimistic
+    setTeams((cur) => {
+      const map = new Map(cur.map((t) => [t.id, t]));
+      return orderedIds.map((id, i) => ({ ...(map.get(id) as Team), sort_order: i } as any));
+    });
+    await Promise.all(
+      orderedIds.map((id, i) =>
+        supabase.from("teams").update({ sort_order: i } as any).eq("id", id)
+      )
+    );
+  };
+
   const homeTeam = teams.find((t) => t.id === settings?.home_team_id) ?? null;
   const battleTeam = teams.find((t) => t.id === settings?.battle_team_id) ?? null;
 
-  return { teams, settings, homeTeam, battleTeam, loading, refresh, saveTeam, deleteTeam, setActiveTeam, setBothActiveTeams, emptyTeam };
+  return { teams, settings, homeTeam, battleTeam, loading, refresh, saveTeam, deleteTeam, setActiveTeam, setBothActiveTeams, reorderTeams, emptyTeam };
 };
