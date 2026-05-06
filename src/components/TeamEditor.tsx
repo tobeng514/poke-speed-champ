@@ -71,7 +71,7 @@ const TeamEditor = ({
                   {data ? "?" : <span className="text-[10px]">{i + 1}</span>}
                 </div>
                 <div className="flex-1 text-left min-w-0">
-                  <p className="font-semibold text-sm truncate">{data?.name ?? `空位 ${i + 1}`}</p>
+                  <p className="font-semibold text-sm truncate">{data ? localizedName(data, lang) : `空位 ${i + 1}`}</p>
                   {data && (
                     <p className="text-[10px] text-muted-foreground truncate">
                       {slot.nature} · {slot.item} · EV {evTotal}/{EV_TOTAL_CAP}
