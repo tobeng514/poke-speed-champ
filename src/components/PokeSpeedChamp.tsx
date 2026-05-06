@@ -360,6 +360,7 @@ const BattleSlotEditor = ({
   slot: BattleSlot; onChange: (patch: Partial<BattleSlot>) => void; accent: Side;
 }) => {
   const data = findPokemon(slot.id);
+  const { lang } = useT();
   return (
     <div className={cn(
       "rounded-xl border p-3 space-y-2",
