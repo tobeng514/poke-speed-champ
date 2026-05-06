@@ -31,30 +31,20 @@ export const BattleIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const tabs = [
-  { to: "/team", label: "隊伍", icon: Users },
-  { to: "/bag", label: "背包", icon: Backpack },
-  { to: "/", label: "主頁", icon: PokeballIcon, end: true },
-  { to: "/battle", label: "對戰", icon: BattleIcon },
-  { to: "/sim", label: "模擬", icon: Beaker },
-];
-
-const titleByRoute: Record<string, string> = {
-  "/": "主頁",
-  "/team": "隊伍",
-  "/bag": "背包",
-  "/battle": "對戰",
-  "/sim": "模擬對戰",
-  "/dex": "圖鑑",
-};
-
 const AppShell = () => {
   const { user, loading } = useAuth();
   const { pathname } = useLocation();
+  const { t } = useT();
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">Loading…</div>;
   if (!user) return <Navigate to="/auth" replace />;
 
-  const title = titleByRoute[pathname] ?? "";
+  const tabs = [
+    { to: "/team", label: t("team"), icon: Users },
+    { to: "/bag", label: t("bag"), icon: Backpack },
+    { to: "/", label: t("home"), icon: PokeballIcon, end: true },
+    { to: "/battle", label: t("battle"), icon: BattleIcon },
+    { to: "/sim", label: t("sim"), icon: Beaker },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
