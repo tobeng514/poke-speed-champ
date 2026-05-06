@@ -88,7 +88,7 @@ const TeamEditor = ({
                   </SelectTrigger>
                   <SelectContent className="max-h-72">
                     {POKEMON.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      <SelectItem key={p.id} value={p.id}>{p.nameZh ? `${p.nameZh} (${p.name})` : p.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
