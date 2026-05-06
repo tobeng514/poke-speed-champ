@@ -43,6 +43,7 @@ interface Row {
 const PokeSpeedChamp = () => {
   const { teams, battleTeam, setActiveTeam } = useTeams();
   const { toast } = useToast();
+  const { lang } = useT();
   const notImpl = (label: string) => toast({ title: `${label}（即將推出）` });
   const [ally, setAlly] = useState<BattleSlot[]>(emptyBattleTeam());
   const [enemy, setEnemy] = useState<BattleSlot[]>(emptyBattleTeam());
@@ -51,6 +52,7 @@ const PokeSpeedChamp = () => {
   const [trickRoom, setTrickRoom] = useState(false);
   const [weather, setWeather] = useState<Weather>("none");
   const [teamSheet, setTeamSheet] = useState<Side | null>(null);
+  const [quickEdit, setQuickEdit] = useState<{ side: Side; idx: number } | null>(null);
 
   // Load active battle team into ally side whenever it changes.
   useEffect(() => {
