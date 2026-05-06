@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Backpack, Users, Beaker } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AppMenu from "./AppMenu";
+import { useT } from "@/i18n";
 
 // Single Pokéball
 export const PokeballIcon = ({ className }: { className?: string }) => (
