@@ -511,15 +511,13 @@ const BagEditor = ({
 
           <Field label="標籤">
             <div className="flex flex-wrap gap-1">
+              {draftTags.length === 0 && <span className="text-[10px] text-muted-foreground">未貼標籤</span>}
               {draftTags.map((t) => (
                 <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-primary text-primary-foreground flex items-center gap-1">
                   #{t}
                   <button onClick={() => toggleTag(t)}><X className="w-3 h-3" /></button>
                 </span>
               ))}
-              <button onClick={() => setTagPickerOpen(true)} className="text-[10px] px-2 py-0.5 rounded-full border border-dashed">
-                + 新增
-              </button>
             </div>
           </Field>
 
