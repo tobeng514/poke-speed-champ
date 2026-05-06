@@ -14,6 +14,7 @@ export interface BagPokemon {
   level: number;
   moves: string[];
   favorite?: boolean;
+  tags?: string[];
   created_at?: string;
 }
 
@@ -59,5 +60,45 @@ export const useBag = () => {
     await refresh();
   };
 
-  return { bag, loading, refresh, add, update, remove };
+  const removeMany = async (ids: string[]) => {
+    if (!ids.length) return;
+    await supabase.from("bag_pokemon").delete().in("id", ids);
+    await refresh();
+  };
+
+  const duplicateMany = async (ids: string[]) => {
+    if (!user || !ids.length) return;
+    const sources = bag.filter((b) => ids.includes(b.id));
+    const rows = sources.map((s) => ({
+      user_id: user.id,
+      pokemon_id: s.pokemon_id,
+      nickname: s.nickname,
+      ability: s.ability,
+      item: s.item,
+      nature: s.nature,
+      evs: s.evs,
+      ivs: s.ivs,
+      level: s.level,
+      moves: s.moves ?? [],
+      favorite: s.favorite ?? false,
+      tags: s.tags ?? [],
+    }));
+    await supabase.from("bag_pokemon").insert(rows as any);
+    await refresh();
+  };
+
+  // append tags (union) to many bag pokemon
+  const tagMany = async (ids: string[], tagsToAdd: string[]) => {
+    if (!ids.length || !tagsToAdd.length) return;
+    const targets = bag.filter((b) => ids.includes(b.id));
+    await Promise.all(
+      targets.map((t) => {
+        const merged = Array.from(new Set([...(t.tags ?? []), ...tagsToAdd]));
+        return supabase.from("bag_pokemon").update({ tags: merged } as any).eq("id", t.id);
+      }),
+    );
+    await refresh();
+  };
+
+  return { bag, loading, refresh, add, update, remove, removeMany, duplicateMany, tagMany };
 };
