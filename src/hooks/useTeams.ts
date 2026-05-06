@@ -20,7 +20,7 @@ export const useTeams = () => {
     if (!user) return;
     setLoading(true);
     const [{ data: t }, { data: s }] = await Promise.all([
-      supabase.from("teams").select("*").order("updated_at", { ascending: false }),
+      supabase.from("teams").select("*").order("sort_order", { ascending: true }).order("updated_at", { ascending: false }),
       supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle(),
     ]);
     setTeams((t ?? []).map((row: any) => ({ ...row, slots: row.slots as TeamSlot[] })));
