@@ -32,7 +32,7 @@ export const BattleIcon = ({ className }: { className?: string }) => (
 );
 
 const AppShell = () => {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const { pathname } = useLocation();
   const { t } = useT();
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">Loading…</div>;
@@ -49,12 +49,13 @@ const AppShell = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
-        <div className="px-2 h-14 flex items-center">
+        <div className="px-2 h-10 flex items-center gap-2">
           <AppMenu />
+          <span className="text-sm font-semibold truncate">{profile?.id_name ?? ""}</span>
         </div>
       </header>
 
-      <div className="flex-1 pb-[calc(env(safe-area-inset-bottom)+72px)]">
+      <div className="flex-1 pb-[calc(env(safe-area-inset-bottom)+52px)]">
         <Outlet />
       </div>
 
@@ -67,14 +68,14 @@ const AppShell = () => {
               end={(t as any).end}
               className={({ isActive }) =>
                 cn(
-                  "flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors",
+                  "flex flex-col items-center justify-center gap-0.5 py-1.5 text-[10px] font-medium transition-colors",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )
               }
             >
               {({ isActive }) => (
                 <>
-                  <t.icon className={cn("w-6 h-6", isActive && "drop-shadow-[0_0_6px_hsl(var(--primary))]")} />
+                  <t.icon className={cn("w-5 h-5", isActive && "drop-shadow-[0_0_6px_hsl(var(--primary))]")} />
                   <span>{t.label}</span>
                 </>
               )}
