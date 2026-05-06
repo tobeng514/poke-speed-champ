@@ -48,18 +48,18 @@ const AppShell = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="px-2 h-10 flex items-center gap-2">
           <AppMenu />
           <span className="text-sm font-semibold truncate">{profile?.id_name ?? ""}</span>
         </div>
       </header>
 
-      <div className="flex-1 pb-[calc(env(safe-area-inset-bottom)+52px)]">
+      <div className="flex-1 pb-[48px]">
         <Outlet />
       </div>
 
-      <nav className="fixed bottom-0 inset-x-0 z-50 bg-background/95 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed bottom-0 inset-x-0 z-50 bg-background/95 backdrop-blur-md border-t border-border">
         <div className="grid grid-cols-5 max-w-md mx-auto">
           {tabs.map((t) => (
             <NavLink

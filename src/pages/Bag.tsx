@@ -172,13 +172,13 @@ const Bag = () => {
         <div className="flex items-center gap-2 mb-2 p-2 rounded-lg bg-secondary/50 text-xs">
           <span className="flex-1">已選 {batchSel.size}</span>
           <Button size="sm" variant="outline" onClick={() => setTagDialogOpen(true)} disabled={!batchSel.size}>
-            <Tag className="w-3 h-3 mr-1" /> 標籤
+            <Tag className="w-3 h-3" />
           </Button>
           <Button size="sm" variant="outline" onClick={async () => { await duplicateMany([...batchSel]); toast({ title: "已複製" }); exitBatch(); }} disabled={!batchSel.size}>
-            <Copy className="w-3 h-3 mr-1" /> 複製
+            <Copy className="w-3 h-3" />
           </Button>
           <Button size="sm" variant="destructive" onClick={async () => { await removeMany([...batchSel]); toast({ title: "已刪除" }); exitBatch(); }} disabled={!batchSel.size}>
-            <Trash2 className="w-3 h-3 mr-1" /> 刪除
+            <Trash2 className="w-3 h-3" />
           </Button>
         </div>
       )}
@@ -549,8 +549,8 @@ const BagEditor = ({
           <Button variant="outline" size="icon" onClick={async () => { await onDelete(draft.id); onClose(); }}>
             <Trash2 className="w-4 h-4 text-destructive" />
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setTagPickerOpen(true)}>
-            <Tag className="w-4 h-4 mr-1" />標籤
+          <Button variant="outline" size="icon" onClick={() => setTagPickerOpen(true)}>
+            <Tag className="w-4 h-4" />
           </Button>
           <Button variant="outline" className="flex-1" onClick={onClose}>取消</Button>
           <Button className="flex-1" onClick={handleSave}>儲存</Button>

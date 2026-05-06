@@ -106,23 +106,23 @@ const TeamPage = () => {
         {batchMode ? (
           <>
             <span className="text-sm text-muted-foreground mr-auto">{t("selected") || "已選"} {batchSel.size}</span>
-            <Button size="sm" variant="outline" onClick={batchDuplicate} disabled={!batchSel.size}>
-              <Copy className="w-4 h-4" /> {t("duplicate") || "複製"}
+            <Button size="icon" variant="outline" onClick={batchDuplicate} disabled={!batchSel.size} aria-label="複製">
+              <Copy className="w-4 h-4" />
             </Button>
-            <Button size="sm" variant="destructive" onClick={batchDelete} disabled={!batchSel.size}>
-              <Trash2 className="w-4 h-4" /> {t("delete")}
+            <Button size="icon" variant="destructive" onClick={batchDelete} disabled={!batchSel.size} aria-label="刪除">
+              <Trash2 className="w-4 h-4" />
             </Button>
-            <Button size="sm" variant="ghost" onClick={exitBatch}>
+            <Button size="icon" variant="ghost" onClick={exitBatch}>
               <X className="w-4 h-4" />
             </Button>
           </>
         ) : (
           <>
-            <Button size="sm" onClick={startNew}>
-              <Plus className="w-4 h-4" /> {t("new")}
+            <Button size="icon" onClick={startNew} aria-label="新建">
+              <Plus className="w-4 h-4" />
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setBatchMode(true)} disabled={teams.length === 0}>
-              <CheckSquare className="w-4 h-4" /> {t("batch") || "批量"}
+            <Button size="icon" variant="outline" onClick={() => setBatchMode(true)} disabled={teams.length === 0} aria-label="批量">
+              <CheckSquare className="w-4 h-4" />
             </Button>
           </>
         )}
