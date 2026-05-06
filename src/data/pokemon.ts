@@ -330,3 +330,10 @@ export const ITEMS = [
   "Focus Sash","Assault Vest","Rocky Helmet","Sitrus Berry","Lum Berry",
   "Light Clay","Mental Herb","Eviolite","Weakness Policy","Safety Goggles",
 ] as const;
+
+export type Item = typeof ITEMS[number];
+
+export const STAGES = [-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6] as const;
+export type Stage = typeof STAGES[number];
+export const stageMultiplier = (s: number): number =>
+  s >= 0 ? (2 + s) / 2 : 2 / (2 - s);
