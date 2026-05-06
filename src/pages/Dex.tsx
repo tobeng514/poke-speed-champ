@@ -225,6 +225,7 @@ const DexDetail = ({ pokemonId, onClose }: { pokemonId: string | null; onClose: 
   const [api, setApi] = useState<ApiPokemon | null>(null);
   const { add } = useBag();
   const { toast } = useToast();
+  const { lang } = useT();
 
   useEffect(() => {
     setApi(null);
@@ -259,7 +260,7 @@ const DexDetail = ({ pokemonId, onClose }: { pokemonId: string | null; onClose: 
     <Sheet open={!!pokemonId} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="bottom" className="h-[92vh] p-0 flex flex-col">
         <SheetHeader className="px-4 py-3 border-b border-border">
-          <SheetTitle>{data.name}</SheetTitle>
+          <SheetTitle>{localizedName(data, lang)}</SheetTitle>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <div className="flex items-center gap-3">
@@ -354,15 +355,18 @@ const TypePills = ({ types }: { types: PokeType[] }) => (
     ))}
   </div>
 );
-const MatchupList = ({ items }: { items: typeof POKEMON }) => (
-  <div className="grid grid-cols-5 gap-1.5">
-    {items.map((p) => (
-      <div key={p.id} className="flex flex-col items-center gap-0.5">
-        <PokemonAvatar pokemonId={p.id} size="sm" interactive={false} />
-        <span className="text-[9px] truncate w-full text-center">{p.name.split("-")[0]}</span>
-      </div>
-    ))}
-  </div>
-);
+const MatchupList = ({ items }: { items: typeof POKEMON }) => {
+  const { lang } = useT();
+  return (
+    <div className="grid grid-cols-5 gap-1.5">
+      {items.map((p) => (
+        <div key={p.id} className="flex flex-col items-center gap-0.5">
+          <PokemonAvatar pokemonId={p.id} size="sm" interactive={false} />
+          <span className="text-[9px] truncate w-full text-center">{localizedName(p, lang).split("-")[0]}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default Dex;
