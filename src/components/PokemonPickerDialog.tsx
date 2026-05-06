@@ -3,6 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { POKEMON } from "@/data/pokemon";
+import { localizedName } from "@/lib/pokemonName";
+import { useT } from "@/i18n";
 import PokemonAvatar from "./PokemonAvatar";
 
 interface Props {
@@ -14,7 +16,13 @@ interface Props {
 
 const PokemonPickerDialog = ({ open, onOpenChange, onPick, title = "選擇 Pokémon" }: Props) => {
   const [q, setQ] = useState("");
-  const list = POKEMON.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
+  const { lang } = useT();
+  const list = POKEMON.filter((p) => {
+    const ql = q.toLowerCase();
+    return p.name.toLowerCase().includes(ql)
+      || (p.nameZh ?? "").toLowerCase().includes(ql)
+      || (p.nameJp ?? "").toLowerCase().includes(ql);
+  });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -28,7 +36,7 @@ const PokemonPickerDialog = ({ open, onOpenChange, onPick, title = "選擇 Poké
               className="flex flex-col items-center gap-1 p-1 rounded-lg hover:bg-secondary active:scale-95 transition"
             >
               <PokemonAvatar pokemonId={p.id} size="sm" interactive={false} />
-              <span className="text-[10px] truncate w-full text-center">{p.name.split("-")[0]}</span>
+              <span className="text-[10px] truncate w-full text-center">{localizedName(p, lang).split("-")[0]}</span>
             </button>
           ))}
           {list.length === 0 && <p className="col-span-5 text-center text-xs text-muted-foreground py-6">無結果</p>}
