@@ -22,7 +22,7 @@ const Home = () => {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-2 pt-3">
+        <div className="grid grid-cols-2 gap-2 pt-3">
           {homeTeam.slots.map((slot, i) => {
             const data = findPokemon(slot.id);
             if (!data) {
