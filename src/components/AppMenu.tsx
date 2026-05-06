@@ -75,7 +75,7 @@ const AppMenu = () => {
                 <div className="h-px bg-border my-2" />
                 <Section>
                   <Row icon={UserIcon} label="帳號" onClick={() => setView("account")} chevron />
-                  <Row icon={Bug} label="回報問題" onClick={() => toast({ title: "即將推出" })} />
+                  <Row icon={Bug} label="回報或建議" onClick={() => toast({ title: "即將推出" })} />
                   <Row icon={Send} label="分享這個 APP" onClick={share} />
                   <Row icon={Settings} label="設定" onClick={() => setView("settings")} chevron />
                   <Row icon={LogOut} label="登出" onClick={async () => { await signOut(); close(); }} destructive />
@@ -98,7 +98,7 @@ const AppMenu = () => {
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">連動帳號</p>
-                  {["Google", "Twitch", "X", "Threads", "Instagram", "Facebook"].map((p) => (
+                  {["Google", "Facebook"].map((p) => (
                     <button
                       key={p}
                       onClick={() => toast({ title: `${p} 連動即將推出` })}
