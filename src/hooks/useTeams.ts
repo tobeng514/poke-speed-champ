@@ -55,6 +55,31 @@ export const useTeams = () => {
     return data;
   };
 
+  const duplicateTeam = async (id: string) => {
+    if (!user) return null;
+    const t = teams.find((x) => x.id === id);
+    if (!t) return null;
+    const baseName = t.name.replace(/\s*\(複製\d*\)$/, "");
+    const used = new Set(teams.map((x) => x.name));
+    let copyName = `${baseName} (複製)`;
+    let n = 2;
+    while (used.has(copyName)) copyName = `${baseName} (複製${n++})`;
+    const { data, error } = await supabase
+      .from("teams")
+      .insert({ user_id: user.id, name: copyName, slots: t.slots as any })
+      .select()
+      .single();
+    if (error) throw error;
+    await refresh();
+    return data;
+  };
+
+  const deleteTeams = async (ids: string[]) => {
+    if (!ids.length) return;
+    await supabase.from("teams").delete().in("id", ids);
+    await refresh();
+  };
+
   const deleteTeam = async (id: string) => {
     await supabase.from("teams").delete().eq("id", id);
     await refresh();
@@ -93,5 +118,5 @@ export const useTeams = () => {
   const homeTeam = teams.find((t) => t.id === settings?.home_team_id) ?? null;
   const battleTeam = teams.find((t) => t.id === settings?.battle_team_id) ?? null;
 
-  return { teams, settings, homeTeam, battleTeam, loading, refresh, saveTeam, deleteTeam, setActiveTeam, setBothActiveTeams, reorderTeams, emptyTeam };
+  return { teams, settings, homeTeam, battleTeam, loading, refresh, saveTeam, deleteTeam, deleteTeams, duplicateTeam, setActiveTeam, setBothActiveTeams, reorderTeams, emptyTeam };
 };
