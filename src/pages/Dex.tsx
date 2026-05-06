@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Plus, Filter, ArrowUpDown, X } from "lucide-react";
+import { Search, Plus, Filter, ArrowUpDown, ArrowUp, ArrowDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SORT_OPTIONS = [
@@ -35,8 +35,10 @@ const Dex = () => {
     const v = localStorage.getItem("dex.sort") as SortKey | null;
     return (v && SORT_OPTIONS.some((o) => o.v === v)) ? v : "no";
   });
+  const [sortAsc, setSortAsc] = useState<boolean>(() => localStorage.getItem("dex.sortAsc") !== "0");
 
   useEffect(() => { localStorage.setItem("dex.sort", sortKey); }, [sortKey]);
+  useEffect(() => { localStorage.setItem("dex.sortAsc", sortAsc ? "1" : "0"); }, [sortAsc]);
 
   const list = useMemo(() => {
     let arr = POKEMON.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
@@ -50,10 +52,9 @@ const Dex = () => {
       arr = [...arr].sort((a, b) => (POKEMON_TYPES[a.id]?.[0] ?? "").localeCompare(POKEMON_TYPES[b.id]?.[0] ?? ""));
     } else if (sortKey === "hp") arr = [...arr].sort((a, b) => b.baseHp - a.baseHp);
     else if (sortKey === "spe") arr = [...arr].sort((a, b) => b.baseSpeed - a.baseSpeed);
-    // atk/def/spa/spd: data not in local; keep dex order (no sort)
-    // sortKey "no" = default order in POKEMON list
+    if (!sortAsc) arr = [...arr].reverse();
     return arr;
-  }, [search, typeFilter, sortKey]);
+  }, [search, typeFilter, sortKey, sortAsc]);
 
   return (
     <div className="px-4 pb-4">
@@ -62,6 +63,9 @@ const Dex = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="搜索 Pokémon…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
+        <Button variant="outline" size="icon" onClick={() => setSortAsc(!sortAsc)} title={sortAsc ? "正序" : "倒序"}>
+          {sortAsc ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+        </Button>
         <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
           <SelectTrigger className="w-auto h-10 px-2 gap-1">
             <ArrowUpDown className="w-4 h-4" />

@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTeams } from "@/hooks/useTeams";
 import { useBag } from "@/hooks/useBag";
 import type { TeamSlot, Team } from "@/types/team";
-import { emptyTeam } from "@/types/team";
+import { emptyTeam, emptySlot } from "@/types/team";
 import { findPokemon } from "@/data/pokemon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,14 +12,24 @@ import PokemonPickerDialog from "@/components/PokemonPickerDialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { Check, GripVertical, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove, SortableContext, useSortable, verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const TeamPage = () => {
-  const { teams, settings, saveTeam, deleteTeam, setBothActiveTeams, loading } = useTeams();
+  const { teams, settings, saveTeam, deleteTeam, setBothActiveTeams, reorderTeams, loading } = useTeams();
   const [editing, setEditing] = useState<{ team?: Team; slots: TeamSlot[]; name: string } | null>(null);
   const [picking, setPicking] = useState(false);
   const { toast } = useToast();
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { delay: 200, tolerance: 5 } }));
 
   const nextDefaultName = () => {
     const used = new Set(teams.map((t) => t.name));
@@ -44,6 +54,16 @@ const TeamPage = () => {
     }
   };
 
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIdx = teams.findIndex((t) => t.id === active.id);
+    const newIdx = teams.findIndex((t) => t.id === over.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    const reordered = arrayMove(teams, oldIdx, newIdx).map((t) => t.id);
+    reorderTeams(reordered);
+  };
+
   return (
     <div className="px-4">
       <header className="py-3 flex items-center justify-end">
@@ -59,42 +79,21 @@ const TeamPage = () => {
           <p className="text-sm text-muted-foreground">仲未有隊伍，撳「新建」開始組隊</p>
         </div>
       ) : (
-        <ul className="space-y-3 pb-4">
-          {teams.map((t) => {
-            const isActive = settings?.home_team_id === t.id;
-            return (
-              <li key={t.id} className={cn(
-                "rounded-2xl border p-3",
-                isActive ? "border-primary bg-primary/5" : "border-border bg-card"
-              )}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    {isActive && <Star className="w-4 h-4 text-primary fill-primary shrink-0" />}
-                    <h3 className="font-semibold truncate">{t.name}</h3>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {!isActive && (
-                      <Button size="sm" variant="outline" onClick={() => setBothActiveTeams(t.id)}>
-                        <Check className="w-3.5 h-3.5" /> 設為當前
-                      </Button>
-                    )}
-                    <Button size="icon" variant="ghost" onClick={() => startEdit(t)}>
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => deleteTeam(t.id)}>
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-                <div className="grid grid-cols-6 gap-1.5">
-                  {t.slots.map((s, i) => (
-                    <PokemonAvatar key={i} pokemonId={s.id ?? ""} size="sm" interactive={false} />
-                  ))}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} autoScroll={{ threshold: { x: 0, y: 0.15 } }}>
+          <SortableContext items={teams.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+            <ul className="space-y-3 pb-4">
+              {teams.map((t) => (
+                <SortableTeam
+                  key={t.id} team={t}
+                  isActive={settings?.home_team_id === t.id}
+                  onActivate={() => setBothActiveTeams(t.id)}
+                  onEdit={() => startEdit(t)}
+                  onDelete={() => deleteTeam(t.id)}
+                />
+              ))}
+            </ul>
+          </SortableContext>
+        </DndContext>
       )}
 
       <Sheet open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
@@ -138,13 +137,15 @@ const TeamPage = () => {
                 onOpenChange={setPicking}
                 currentSlots={editing.slots}
                 onConfirm={(pickedBag) => {
-                  const next = [...editing.slots];
-                  let idx = 0;
-                  for (const b of pickedBag) {
-                    while (idx < 6 && next[idx]?.id) idx++;
-                    if (idx >= 6) break;
-                    next[idx] = {
-                      ...next[idx],
+                  // Replace strategy: keep slots whose bagId still selected (preserving custom edits),
+                  // then append newly added bag entries; pad to 6.
+                  const keptIds = new Set(pickedBag.map((b) => b.id));
+                  const kept = editing.slots.filter((s) => s.bagId && keptIds.has(s.bagId));
+                  const keptBagIds = new Set(kept.map((s) => s.bagId));
+                  const added = pickedBag
+                    .filter((b) => !keptBagIds.has(b.id))
+                    .map<TeamSlot>((b) => ({
+                      ...emptySlot(),
                       id: b.pokemon_id,
                       bagId: b.id,
                       nickname: b.nickname ?? undefined,
@@ -155,10 +156,10 @@ const TeamPage = () => {
                       ivs: b.ivs,
                       level: b.level,
                       moves: b.moves ?? [],
-                    };
-                    idx++;
-                  }
-                  setEditing({ ...editing, slots: next });
+                    }));
+                  const next = [...kept, ...added];
+                  while (next.length < 6) next.push(emptySlot());
+                  setEditing({ ...editing, slots: next.slice(0, 6) });
                   setPicking(false);
                 }}
               />
@@ -167,6 +168,55 @@ const TeamPage = () => {
         </SheetContent>
       </Sheet>
     </div>
+  );
+};
+
+const SortableTeam = ({ team, isActive, onActivate, onEdit, onDelete }: {
+  team: Team; isActive: boolean;
+  onActivate: () => void; onEdit: () => void; onDelete: () => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: team.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  return (
+    <li ref={setNodeRef} style={style} className={cn(
+      "rounded-2xl border p-3 touch-manipulation",
+      isActive ? "border-primary bg-primary/5" : "border-border bg-card"
+    )}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2 min-w-0">
+          {isActive && <Star className="w-4 h-4 text-primary fill-primary shrink-0" />}
+          <h3 className="font-semibold truncate">{team.name}</h3>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          {!isActive && (
+            <Button size="sm" variant="outline" onClick={onActivate}>
+              <Check className="w-3.5 h-3.5" /> 設為當前
+            </Button>
+          )}
+          <Button size="icon" variant="ghost" onClick={onEdit}>
+            <Pencil className="w-4 h-4" />
+          </Button>
+          <Button size="icon" variant="ghost" onClick={onDelete}>
+            <Trash2 className="w-4 h-4 text-destructive" />
+          </Button>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="grid grid-cols-6 gap-1.5 flex-1">
+          {team.slots.map((s, i) => (
+            <PokemonAvatar key={i} pokemonId={s.id ?? ""} size="sm" interactive={false} />
+          ))}
+        </div>
+        <button
+          {...attributes}
+          {...listeners}
+          aria-label="拖動排序"
+          className="p-1.5 rounded-md text-muted-foreground hover:bg-secondary touch-none cursor-grab active:cursor-grabbing"
+        >
+          <GripVertical className="w-5 h-5" />
+        </button>
+      </div>
+    </li>
   );
 };
 
@@ -179,26 +229,32 @@ const BagSelectDialog = ({
   onConfirm: (picked: import("@/hooks/useBag").BagPokemon[]) => void;
 }) => {
   const { bag, add } = useBag();
-  const [selected, setSelected] = useState<string[]>([]); // bag entry ids
+  const [selected, setSelected] = useState<string[]>([]);
   const [addOpen, setAddOpen] = useState(false);
   const { toast } = useToast();
 
-  const filledCount = currentSlots.filter((s) => s.id).length;
-  const remaining = 6 - filledCount;
-  const usedBagIds = new Set(currentSlots.map((s) => s.bagId).filter(Boolean) as string[]);
+  // sync selection with current team's bag entries each time the dialog opens
+  useEffect(() => {
+    if (open) {
+      setSelected(currentSlots.map((s) => s.bagId).filter(Boolean) as string[]);
+    }
+  }, [open]);
 
   const toggle = (bagId: string) => {
     if (selected.includes(bagId)) setSelected(selected.filter((x) => x !== bagId));
-    else if (selected.length < remaining) setSelected([...selected, bagId]);
-    else toast({ title: `最多揀 ${remaining} 隻` });
+    else if (selected.length < 6) setSelected([...selected, bagId]);
+    else toast({ title: "最多揀 6 隻" });
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) setSelected([]); onOpenChange(o); }}>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
       <DialogContent className="max-w-md">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle>從背包選（{selected.length}/{remaining}）</DialogTitle>
+            <DialogTitle>從背包選（{selected.length}/6）</DialogTitle>
             <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
               <Plus className="w-4 h-4" /> 新增
             </Button>
@@ -211,13 +267,11 @@ const BagSelectDialog = ({
             {bag.map((b) => {
               const data = findPokemon(b.pokemon_id);
               const sel = selected.includes(b.id);
-              const inUse = usedBagIds.has(b.id);
               return (
-                <button key={b.id} disabled={inUse} onClick={() => toggle(b.id)}
+                <button key={b.id} onClick={() => toggle(b.id)}
                   className={cn(
                     "flex flex-col items-center gap-1 p-1.5 rounded-xl border transition active:scale-95",
                     sel ? "border-primary bg-primary/10 ring-2 ring-primary" : "border-border bg-card",
-                    inUse && "opacity-40"
                   )}>
                   <PokemonAvatar pokemonId={b.pokemon_id} size="sm" interactive={false} />
                   <span className="text-[10px] truncate w-full text-center">
@@ -230,10 +284,11 @@ const BagSelectDialog = ({
         )}
         <div className="flex gap-2 pt-2">
           <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>取消</Button>
-          <Button className="flex-1" disabled={selected.length === 0} onClick={() => {
-            const picked = bag.filter((b) => selected.includes(b.id));
+          <Button className="flex-1" onClick={() => {
+            const picked = selected
+              .map((id) => bag.find((b) => b.id === id))
+              .filter(Boolean) as import("@/hooks/useBag").BagPokemon[];
             onConfirm(picked);
-            setSelected([]);
           }}>
             確認
           </Button>
@@ -246,7 +301,7 @@ const BagSelectDialog = ({
           onPick={async (id) => {
             try {
               const created = await add(id);
-              if (created && selected.length < remaining) setSelected([...selected, created.id]);
+              if (created && selected.length < 6) setSelected([...selected, created.id]);
               toast({ title: "已加入背包" });
             } catch (e: any) { toast({ title: "失敗", description: e.message, variant: "destructive" }); }
           }}
