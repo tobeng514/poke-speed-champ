@@ -281,9 +281,17 @@ const SortableTeam = ({
       </div>
       <div className="flex items-center gap-2">
         <div className="grid grid-cols-6 gap-1.5 flex-1">
-          {team.slots.map((s, i) => (
-            <PokemonAvatar key={i} pokemonId={s.id ?? ""} size="sm" interactive={false} />
-          ))}
+          {team.slots.map((s, i) => {
+            const d = findPokemon(s.id ?? "");
+            return (
+              <div key={i} className="flex flex-col items-center gap-0.5 min-w-0">
+                <PokemonAvatar pokemonId={s.id ?? ""} size="sm" interactive={false} />
+                <span className="text-[9px] truncate w-full text-center text-muted-foreground">
+                  {d ? localizedName(d, lang).split("-")[0] : ""}
+                </span>
+              </div>
+            );
+          })}
         </div>
         {!batchMode && (
           <>
