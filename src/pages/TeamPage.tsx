@@ -169,12 +169,19 @@ const TeamPage = () => {
                   onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                 />
                 <div className="grid grid-cols-6 gap-1.5">
-                  {editing.slots.map((s, i) => (
-                    <div key={i}
-                      className="aspect-square rounded-lg border border-dashed border-border bg-card flex items-center justify-center">
-                      {s.id ? <PokemonAvatar pokemonId={s.id} size="sm" interactive={false} /> : <Plus className="w-4 h-4 text-muted-foreground" />}
-                    </div>
-                  ))}
+                  {editing.slots.map((s, i) => {
+                    const d = findPokemon(s.id ?? "");
+                    return (
+                      <div key={i} className="flex flex-col items-center gap-0.5">
+                        <div className="aspect-square w-full rounded-lg border border-dashed border-border bg-card flex items-center justify-center">
+                          {s.id ? <PokemonAvatar pokemonId={s.id} size="sm" interactive={false} /> : <Plus className="w-4 h-4 text-muted-foreground" />}
+                        </div>
+                        <span className="text-[9px] truncate w-full text-center text-muted-foreground">
+                          {d ? localizedName(d, "zh-TW").split("-")[0] : ""}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
                 <Button variant="outline" className="w-full" onClick={() => setPicking(true)}>
                   <span className="text-lg mr-1" role="img" aria-label="bag">🎒</span> 打開背包
