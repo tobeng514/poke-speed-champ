@@ -240,7 +240,7 @@ const PokeSpeedChamp = () => {
         )}
       </main>
 
-      <nav className="fixed bottom-[calc(env(safe-area-inset-bottom)+52px)] inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border">
+      <nav className="fixed bottom-[48px] inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border">
         <div className="px-3 py-2 space-y-1.5 max-w-md mx-auto">
           <div className="grid grid-cols-4 gap-1.5">
             <WeatherBtn active={weather === "sun"} onClick={() => toggleWeather("sun")} variant="sun" icon={<Sun className="w-4 h-4" />} label="Sun" />
