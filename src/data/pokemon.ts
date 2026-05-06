@@ -324,3 +324,9 @@ const SPEED_PLUS: Nature[] = ["Timid","Hasty","Jolly","Naive"];
 const SPEED_MINUS: Nature[] = ["Brave","Relaxed","Quiet","Sassy"];
 export const speedNatureMod = (n: Nature): number =>
   SPEED_PLUS.includes(n) ? 1.1 : SPEED_MINUS.includes(n) ? 0.9 : 1.0;
+
+export const ITEMS = [
+  "None","Leftovers","Choice Band","Choice Specs","Choice Scarf","Life Orb",
+  "Focus Sash","Assault Vest","Rocky Helmet","Sitrus Berry","Lum Berry",
+  "Light Clay","Mental Herb","Eviolite","Weakness Policy","Safety Goggles",
+] as const;
