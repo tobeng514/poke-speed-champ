@@ -84,7 +84,7 @@ const PokeSpeedChamp = () => {
     const build = (slots: BattleSlot[], side: Side): Row[] =>
       slots
         .map((s, slotIdx) => ({ s, slotIdx }))
-        .filter(({ s }) => s.id)
+        .filter(({ s }) => s.id && findPokemon(s.id))
         .map(({ s, slotIdx }) => {
           const data = findPokemon(s.id)!;
           const baseSpd = calcStat(data.baseSpeed, s.ivs.spe, s.evs.spe, speedNatureMod(s.nature ?? "Hardy"));
