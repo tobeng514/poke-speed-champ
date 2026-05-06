@@ -186,29 +186,33 @@ const DexFilterDialog = ({
         )}
         {tab === "move" && (
           <div className="space-y-2">
-            <Input placeholder="搜索技能…" value={moveQ} onChange={(e) => setMoveQ(e.target.value)} />
-            <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1">
+            <p className="text-[10px] text-muted-foreground">點擊屬性查看技能</p>
+            <div className="grid grid-cols-3 gap-1.5">
               {TYPES.map((t) => (
-                <button key={t} onClick={() => setMoveTypeSel(moveTypeSel === t ? null : t)}
-                  className={cn("text-[10px] px-2 py-1 rounded-md shrink-0 border transition",
-                    moveTypeSel === t ? "ring-2 ring-primary" : "opacity-60")}
+                <button key={t} onClick={() => setMoveTypeSel(t)}
+                  className="text-[11px] px-2 py-1.5 rounded-md border transition"
                   style={{ backgroundColor: TYPE_COLORS[t], color: "white", borderColor: TYPE_COLORS[t] }}>
                   {TYPE_ZH[t]}
                 </button>
               ))}
             </div>
-            <div className="max-h-56 overflow-y-auto space-y-0.5">
-              {!moveTypeSel && <p className="text-xs text-muted-foreground text-center py-4">先選一個屬性</p>}
-              {moveTypeSel && filteredMoves.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">無資料</p>}
-              {filteredMoves.slice(0, 200).map((m) => (
-                <button key={m} onClick={() => setLocalMove(m)}
-                  className={cn("w-full text-left text-xs px-2 py-1.5 rounded hover:bg-secondary",
-                    localMove === m && "bg-primary text-primary-foreground")}>
-                  {prettyName(m)}
-                </button>
-              ))}
-            </div>
             {localMove && <p className="text-[10px]">已選技能：<b>{prettyName(localMove)}</b> <button onClick={() => setLocalMove(null)} className="text-destructive ml-1">清除</button></p>}
+            <Dialog open={!!moveTypeSel} onOpenChange={(o) => !o && setMoveTypeSel(null)}>
+              <DialogContent className="max-w-sm">
+                <DialogHeader><DialogTitle>{moveTypeSel ? `${TYPE_ZH[moveTypeSel]} 技能` : ""}</DialogTitle></DialogHeader>
+                <Input placeholder="搜索技能…" value={moveQ} onChange={(e) => setMoveQ(e.target.value)} />
+                <div className="max-h-[55vh] overflow-y-auto space-y-0.5">
+                  {filteredMoves.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">載入中或無資料…</p>}
+                  {filteredMoves.slice(0, 300).map((m) => (
+                    <button key={m} onClick={() => { setLocalMove(m); setMoveTypeSel(null); }}
+                      className={cn("w-full text-left text-xs px-2 py-1.5 rounded hover:bg-secondary",
+                        localMove === m && "bg-primary text-primary-foreground")}>
+                      {prettyName(m)}
+                    </button>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
         <div className="flex gap-2 pt-2">
