@@ -4,10 +4,13 @@ import { findPokemon, calcHp } from "@/data/pokemon";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import PokemonAvatar from "@/components/PokemonAvatar";
+import { localizedName } from "@/lib/pokemonName";
+import { useT } from "@/i18n";
 
 const Home = () => {
   const { homeTeam, loading } = useTeams();
   const { profile } = useAuth();
+  const { lang } = useT();
 
   return (
     <div className="px-4">
