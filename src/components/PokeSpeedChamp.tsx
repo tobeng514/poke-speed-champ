@@ -282,25 +282,25 @@ const PokeSpeedChamp = () => {
         </SheetContent>
       </Sheet>
 
-      <Dialog open={quickEdit !== null} onOpenChange={(o) => !o && setQuickEdit(null)}>
-        <DialogContent className="max-w-xs">
-          <DialogHeader>
-            <DialogTitle>
+      <Sheet open={quickEdit !== null} onOpenChange={(o) => !o && setQuickEdit(null)}>
+        <SheetContent side="bottom" className="p-0 flex flex-col max-h-[80vh]">
+          <SheetHeader className="px-4 py-3 border-b border-border">
+            <SheetTitle>
               {quickEdit && (() => {
                 const arr = quickEdit.side === "ally" ? ally : enemy;
                 const s = arr[quickEdit.idx];
                 const d = findPokemon(s?.id);
                 return s?.nickname || (d ? localizedName(d, lang) : "");
               })()}
-            </DialogTitle>
-          </DialogHeader>
+            </SheetTitle>
+          </SheetHeader>
           {quickEdit && (() => {
             const arr = quickEdit.side === "ally" ? ally : enemy;
             const s = arr[quickEdit.idx];
             if (!s) return null;
             const change = (p: Partial<BattleSlot>) => updateSlot(quickEdit.side, quickEdit.idx, p);
             return (
-              <div className="space-y-3">
+              <div className="p-4 space-y-3 overflow-y-auto">
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase tracking-wider text-muted-foreground">速度階段</label>
                   <div className="grid grid-cols-7 gap-1">
@@ -326,8 +326,8 @@ const PokeSpeedChamp = () => {
               </div>
             );
           })()}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
