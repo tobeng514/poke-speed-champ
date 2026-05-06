@@ -86,10 +86,10 @@ const AppMenu = () => {
 
             {view === "account" && (
               <div className="p-4 space-y-4">
-                <Button variant="ghost" size="sm" onClick={() => setView("menu")}>← 返回</Button>
-                <InfoBlock label="Email" value={user?.email ?? "—"} />
+                <Button variant="ghost" size="sm" onClick={() => setView("menu")}>{t("backTo")}</Button>
+                <InfoBlock label={t("email")} value={user?.email ?? "—"} />
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">ID Name</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t("idName")}</p>
                   <div className="flex gap-2">
                     <Input value={idDraft} onChange={(e) => setIdDraft(e.target.value)} className="h-9" />
                     <Button size="sm" onClick={saveIdName} disabled={savingId || idDraft.trim() === (profile?.id_name ?? "")}>
@@ -98,15 +98,15 @@ const AppMenu = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">連動帳號</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("linkedAccounts")}</p>
                   {["Google", "Facebook"].map((p) => (
                     <button
                       key={p}
-                      onClick={() => toast({ title: `${p} 連動即將推出` })}
+                      onClick={() => toast({ title: `${p} ${t("linkSoon")}` })}
                       className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border border-border bg-card hover:bg-secondary/40 text-sm"
                     >
                       <span>{p}</span>
-                      <span className="text-[11px] text-muted-foreground">未連動</span>
+                      <span className="text-[11px] text-muted-foreground">{t("notLinked")}</span>
                     </button>
                   ))}
                 </div>
