@@ -34,6 +34,7 @@ interface Row {
   slot: BattleSlot;
   data: PokemonData;
   side: Side;
+  slotIdx: number;
   realSpeed: number;
   scarfSpeed: number | null;
   weatherSpeed: number;
