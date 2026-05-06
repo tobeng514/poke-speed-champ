@@ -28,6 +28,7 @@ export type Database = {
           nature: string | null
           nickname: string | null
           pokemon_id: string
+          tags: string[]
           updated_at: string
           user_id: string
         }
@@ -44,6 +45,7 @@ export type Database = {
           nature?: string | null
           nickname?: string | null
           pokemon_id: string
+          tags?: string[]
           updated_at?: string
           user_id: string
         }
@@ -60,7 +62,32 @@ export type Database = {
           nature?: string | null
           nickname?: string | null
           pokemon_id?: string
+          tags?: string[]
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bag_tags: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
           user_id?: string
         }
         Relationships: []
