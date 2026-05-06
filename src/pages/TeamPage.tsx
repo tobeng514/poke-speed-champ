@@ -27,6 +27,7 @@ import { CSS } from "@dnd-kit/utilities";
 
 const TeamPage = () => {
   const { teams, settings, saveTeam, deleteTeam, deleteTeams, duplicateTeam, setBothActiveTeams, reorderTeams, loading } = useTeams();
+  const { lang } = useT();
   const [editing, setEditing] = useState<{ team?: Team; slots: TeamSlot[]; name: string } | null>(null);
   const [picking, setPicking] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
