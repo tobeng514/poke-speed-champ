@@ -83,8 +83,9 @@ const PokeSpeedChamp = () => {
   const rows = useMemo<Row[]>(() => {
     const build = (slots: BattleSlot[], side: Side): Row[] =>
       slots
-        .filter((s) => s.id)
-        .map((s) => {
+        .map((s, slotIdx) => ({ s, slotIdx }))
+        .filter(({ s }) => s.id)
+        .map(({ s, slotIdx }) => {
           const data = findPokemon(s.id)!;
           const baseSpd = calcStat(data.baseSpeed, s.ivs.spe, s.evs.spe, speedNatureMod(s.nature ?? "Hardy"));
           const real = Math.floor(baseSpd * stageMultiplier(s.stage));
@@ -100,7 +101,7 @@ const PokeSpeedChamp = () => {
           const tw = side === "ally" ? allyTW : enemyTW;
           if (tw) wSpd = Math.floor(wSpd * 2);
           return {
-            slot: s, data, side, realSpeed: real,
+            slot: s, data, side, slotIdx, realSpeed: real,
             scarfSpeed: isScarf ? scarfVal : null,
             weatherSpeed: wSpd,
             isScarf,
