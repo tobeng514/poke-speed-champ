@@ -4,6 +4,8 @@ import { useBag } from "@/hooks/useBag";
 import type { TeamSlot, Team } from "@/types/team";
 import { emptyTeam, emptySlot } from "@/types/team";
 import { findPokemon } from "@/data/pokemon";
+import { localizedName } from "@/lib/pokemonName";
+import { useT } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import TeamEditor from "@/components/TeamEditor";
