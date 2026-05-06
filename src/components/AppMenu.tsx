@@ -70,16 +70,16 @@ const AppMenu = () => {
             {view === "menu" && (
               <div className="py-2">
                 <Section>
-                  <Row icon={BookOpen} label="圖鑑" onClick={() => { close(); window.location.assign("/dex"); }} />
-                  <Row icon={Share2} label="隊伍分享" onClick={() => toast({ title: "即將推出" })} />
+                  <Row icon={BookOpen} label={t("dex")} onClick={() => { close(); window.location.assign("/dex"); }} />
+                  <Row icon={Share2} label={t("teamShare")} onClick={() => toast({ title: t("soon") })} />
                 </Section>
                 <div className="h-px bg-border my-2" />
                 <Section>
-                  <Row icon={UserIcon} label="帳號" onClick={() => setView("account")} chevron />
-                  <Row icon={Bug} label="回報或建議" onClick={() => toast({ title: "即將推出" })} />
-                  <Row icon={Send} label="分享這個 APP" onClick={share} />
-                  <Row icon={Settings} label="設定" onClick={() => setView("settings")} chevron />
-                  <Row icon={LogOut} label="登出" onClick={async () => { await signOut(); close(); }} destructive />
+                  <Row icon={UserIcon} label={t("account")} onClick={() => setView("account")} chevron />
+                  <Row icon={Bug} label={t("reportIssue")} onClick={() => toast({ title: t("soon") })} />
+                  <Row icon={Send} label={t("shareApp")} onClick={share} />
+                  <Row icon={Settings} label={t("settings")} onClick={() => setView("settings")} chevron />
+                  <Row icon={LogOut} label={t("logout")} onClick={async () => { await signOut(); close(); }} destructive />
                 </Section>
               </div>
             )}
