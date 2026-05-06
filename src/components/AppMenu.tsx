@@ -60,9 +60,9 @@ const AppMenu = () => {
         <SheetContent side="left" className="w-[85vw] max-w-sm p-0 flex flex-col">
           <SheetHeader className="px-4 py-4 border-b border-border">
             <SheetTitle>
-              {view === "menu" && "選單"}
-              {view === "account" && "帳號"}
-              {view === "settings" && "設定"}
+              {view === "menu" && t("menu")}
+              {view === "account" && t("account")}
+              {view === "settings" && t("settings")}
             </SheetTitle>
           </SheetHeader>
 
